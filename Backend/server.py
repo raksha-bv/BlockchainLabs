@@ -176,17 +176,12 @@ def suggestions():
     
     prompt = """You are an expert Solidity mentor with years of experience in blockchain development and smart contract auditing.
 
-    Review the Solidity code against the problem statement and provide structured feedback in JSON format:
+    Review the Solidity code against the problem statement and provide structured feedback in JSON format with the values being simple short strings:
 
 {
-    "errors": [
-        {"type": "syntax/logic/security/gas", "description": "Error details", "location": "Line or function", "fix": "Suggested fix"}
-    ],
-    "improvements": [
-        {"category": "readability/maintainability/security/gas/best-practice", "description": "Improvement details", "suggestion": "Implementation suggestion"}
-    ],
-    "compliments": ["Good practices used"],
-    "security_considerations": ["Security aspects to review"],
+    "errors": "List of syntax errors or issues that prevent compilation",
+    "improvements": "Improvements to optimize gas usage, enhance security, or follow best practices",
+    "compliments": "Compliments for well-written code or good practices",
     "summary": "Overall assessment and key points"
 }
 
