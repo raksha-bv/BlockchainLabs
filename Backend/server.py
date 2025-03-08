@@ -61,9 +61,36 @@ def connect():
 @app.route('/generatePS', methods=['GET'])
 def generatePS():
     """Generate a beginner-level Solidity problem statement"""
-    prompt = """You are a senior blockchain developer creating educational content for Solidity beginners.
+    prompt = """You are creating educational content for complete beginners who want to learn Solidity from scratch.
 
-    Generate a beginner-friendly smart contract problem statement that helps someone new to Solidity learn fundamental concepts.
+Generate a very simple Solidity problem statement that introduces fundamental concepts step by step.
+
+The problem should:
+- Focus on basic contract structure, state variables, simple functions, and visibility modifiers
+- Be easy to understand for someone with little to no blockchain experience
+- Use a real-world example that shows how smart contracts work in a practical way
+- Be implementable in 20-40 lines of code
+
+Format the problem statement as a JSON object with these fields:
+{
+    "title": "A short, beginner-friendly title",
+    "description": "A simple explanation of what the learner needs to build",
+    "requirements": ["List of basic concepts to include, such as variables, functions, and modifiers"],
+    "hints": ["Small tips to guide the learner without giving the solution"]
+}
+
+Do not include code solutions in your response, only the problem statement.
+"""  
+
+    
+    return generate_ai_response(prompt)
+
+@app.route('/generatePSI', methods=['GET'])
+def generatePSI():
+    """Generate an beginner-level Solidity problem statement"""
+    prompt = """You are a senior blockchain developer creating educational content for beginner Solidity developers.
+
+    Generate an beginner-level smart contract problem statement (single smart contract needed) that helps developers advance their Solidity skills.
     
     The problem should:
     - Focus on basic contract structure, simple data types, functions, and state variables
@@ -73,8 +100,8 @@ def generatePS():
     
     Format the problem statement as a JSON object with these fields:
     {
-        "title": "A concise, descriptive title",
-        "description": "A detailed explanation of the problem context and objectives",
+        "title": "A short, easy to understand title",
+        "description": "A simple explanation of what the learner needs to build",
         "requirements": ["List of specific technical requirements the solution must meet"],
         "hints": ["Helpful guidance without giving away the solution"]
     }
@@ -84,8 +111,8 @@ def generatePS():
     
     return generate_ai_response(prompt)
 
-@app.route('/generatePSI', methods=['GET'])
-def generatePSI():
+@app.route('/generatePSA', methods=['GET'])
+def generatePSA():
     """Generate an intermediate-level Solidity problem statement"""
     prompt = """You are a senior blockchain developer creating educational content for intermediate Solidity developers.
 
@@ -110,41 +137,35 @@ def generatePSI():
     
     return generate_ai_response(prompt)
 
-@app.route('/generatePSA', methods=['GET'])
-def generatePSA():
-    """Generate an advanced-level Solidity problem statement"""
-    prompt = """You are a senior blockchain developer creating educational content for advanced Solidity developers.
-
-    Generate an advanced smart contract problem statement that challenges experienced Solidity developers.
-    
-    The problem should:
-    - Focus on complex topics like proxy patterns, factory contracts, and advanced gas optimization
-    - Include security considerations for high-value contracts
-    - Require implementation of EIPs or standards (like ERC20, ERC721, ERC1155, etc.)
-    - Present a complex real-world scenario that would benefit from blockchain technology
-    - Challenge developers to handle edge cases and potential vulnerabilities
-    
-    Format the problem statement as a JSON object with these fields:
-    {
-        "title": "A concise, descriptive title",
-        "description": "A detailed explanation of the problem context and objectives",
-        "requirements": ["List of specific technical requirements the solution must meet"],
-        "hints": ["Helpful guidance without giving away the solution"]
-    }
-    
-    Do not include code solutions in your response, only the problem statement.
-    """
-    
-    return generate_ai_response(prompt)
-
 @app.route('/validate-code', methods=['POST'])
 def validate_code():
     """Validate if Solidity code is compilable"""
     data = request.get_json()
     code = data.get('code', '')
+    problem_statement = data.get('problem_statement', '')
     
     # Perform actual compilation check
     compilation_result = check_solidity_compilation(code)
+    if compilation_result["error"] == "":
+        prompt = f"""
+    Analyze the Solidity code against the problem requirements:
+    
+    Problem Statement: {problem_statement}
+    
+    Code: {code}
+    
+    Compilation Result: {compilation_result}
+    
+    Provide your analysis in the following JSON format:
+    {{
+        "status": true/false,
+        "error": "Detailed explanation of how and which requirements are not met, if all requirements are met, leave it empty",
+        "syntax_correct": "true/false",
+        "compilable_code": "true/false"
+    }}
+    """
+        return generate_ai_response(prompt)
+
     
     # Return just the compilation result
     return jsonify(compilation_result)
@@ -227,6 +248,8 @@ def check_solidity_compilation(code):
             "error": f"Unexpected error: {str(e)}",
             "solidity_version": DEFAULT_SOLC_VERSION
         }
+    
+
 
 @app.route('/suggestions', methods=['POST'])
 def suggestions():
