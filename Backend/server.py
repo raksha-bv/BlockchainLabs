@@ -209,6 +209,8 @@ def check_solidity_compilation(code):
                     "solidity_version": pragma_version
                 }
         except Exception as compile_error:
+            response = model.generate_content(f"Simplify the error , format it nicely in short sentence just telling where the error is : {str(compile_error)}")
+            compile_error = response.text
             return {
                 "status": False,
                 "syntax_correct": False,
