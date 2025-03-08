@@ -11,7 +11,6 @@ import google.generativeai as genai
 load_dotenv()
 
 # Configure solcx - ensure paths are absolute
-solcx.install_solc("0.8.0")
 SOLCX_PATH = os.path.join(os.getcwd(), ".solcx")
 os.environ["SOLCX_BINARY_PATH"] = SOLCX_PATH
 
