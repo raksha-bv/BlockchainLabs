@@ -1,20 +1,29 @@
+import os
+import json
+import solcx
 from flask import Flask, request, jsonify
 from dotenv import load_dotenv
 from flask_cors import CORS
 import google.generativeai as genai
-import os
-import json
-import solcx
 
-# Install and set Solidity compiler version
-solcx.install_solc("0.8.0")
-solcx.set_solc_version("0.8.0")
-
-# Load environment variables
+# Modify this section for better serverless support
+# Load environment variables first
 load_dotenv()
-genai.configure(api_key=os.getenv("API_KEY"))
+
+# Configure solcx - ensure paths are absolute
+solcx.install_solc("0.8.0")
+SOLCX_PATH = os.path.join(os.getcwd(), ".solcx")
+os.environ["SOLCX_BINARY_PATH"] = SOLCX_PATH
+
+# Configure API
+API_KEY = os.getenv("API_KEY")
+if not API_KEY:
+    print("Warning: API_KEY not found in environment variables")
+    
+genai.configure(api_key=API_KEY)
 model = genai.GenerativeModel("gemini-2.0-flash")
 
+# Create Flask app
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
 
@@ -115,7 +124,6 @@ def validate_code():
     return jsonify(compilation_result)
 
 def check_solidity_compilation(code):
-    """Check if Solidity code compiles using solcx with dynamic version detection"""
     try:
         # Extract pragma version from the code if present
         pragma_version = None
@@ -123,51 +131,18 @@ def check_solidity_compilation(code):
             # Find the pragma line
             pragma_line = [line for line in code.split('\n') if "pragma solidity" in line][0]
             
-            # Extract version specification
-            if "^" in pragma_line:
-                # Handle caret version like ^0.8.0
-                pragma_version = pragma_line.split("^")[1].split(";")[0].strip()
-            elif ">=" in pragma_line and "<" in pragma_line:
-                # Handle range like >=0.8.0 <0.9.0
-                min_version = pragma_line.split(">=")[1].split("<")[0].strip()
-                pragma_version = min_version
-            elif "=" in pragma_line:
-                # Handle exact version like =0.8.0
-                pragma_version = pragma_line.split("=")[1].split(";")[0].strip()
-            else:
-                # Handle plain version like 0.8.0
-                version_part = pragma_line.split("pragma solidity")[1].split(";")[0].strip()
-                if version_part:
-                    pragma_version = version_part
-        
+            # Extract version specification - simplified for demo
+            pragma_version = "0.8.0"  # Default to 0.8.0 for simplicity
+            
+            # You may want to parse the pragma more carefully here
+            
         # Default to 0.8.0 if no version found
         if not pragma_version:
             pragma_version = "0.8.0"
             code = "pragma solidity ^0.8.0;\n" + code
             
-        # Clean up version string - keep only the main version like 0.8.0
-        # This removes potential whitespace or extra characters
-        if pragma_version:
-            version_parts = [part for part in pragma_version.split('.') if part.isdigit()]
-            if len(version_parts) >= 2:
-                # Format as major.minor.patch or major.minor if patch not specified
-                if len(version_parts) >= 3:
-                    pragma_version = f"{version_parts[0]}.{version_parts[1]}.{version_parts[2]}"
-                else:
-                    pragma_version = f"{version_parts[0]}.{version_parts[1]}.0"
-            else:
-                pragma_version = "0.8.0"  # fallback if parsing fails
-        
-        # Get available installed versions
-        installed_versions = solcx.get_installed_solc_versions()
-        
-        # Install the required version if not already installed
-        if not any(str(v).startswith(pragma_version) for v in installed_versions):
-            print(f"Installing Solidity version {pragma_version}")
-            solcx.install_solc(pragma_version)
-        
-        # Set the compiler version
-        solcx.set_solc_version(pragma_version)
+        # Set the compiler version - no installation
+        solcx.set_solc_version_pragma(f"^{pragma_version}")
             
         # Compile the code
         output = solcx.compile_source(code)
