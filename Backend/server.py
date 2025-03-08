@@ -9,11 +9,11 @@ import google.generativeai as genai
 # Load environment variables first
 load_dotenv()
 
-# Configure solcx - ensure paths are absolute and install solc
-SOLCX_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".solcx")
+# Configure solcx - use /tmp directory which is writable in Vercel
+SOLCX_PATH = os.path.join('/tmp', '.solcx')
 os.environ["SOLCX_BINARY_PATH"] = SOLCX_PATH
 
-# Ensure the solcx directory exists
+# Ensure the solcx directory exists in the writable area
 os.makedirs(SOLCX_PATH, exist_ok=True)
 
 # Configure API
@@ -28,25 +28,35 @@ model = genai.GenerativeModel("gemini-2.0-flash")
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
 
-# Initialize solc - this is critical for Vercel
+# Define solc versions to use
+DEFAULT_SOLC_VERSION = "0.8.0"
+
+# Initialize solc - use a try-except to handle initialization issues
 try:
-    # Check if solc is already installed
-    solc_versions = solcx.get_installed_solc_versions()
-    if not solc_versions or "0.8.0" not in [str(v) for v in solc_versions]:
-        # Install solc 0.8.0 if not found
-        print("Installing solc 0.8.0...")
-        solcx.install_solc("0.8.0", allow_osx=True, allow_windows=True, show_progress=False)
-    
-    # Set default version
-    solcx.set_solc_version("0.8.0")
-    print(f"Solc versions available: {solcx.get_installed_solc_versions()}")
+    # Install solc if needed - pre-compiled binary is in the writable /tmp directory
+    print(f"Installing solc {DEFAULT_SOLC_VERSION}...")
+    solcx.install_solc(DEFAULT_SOLC_VERSION, allow_osx=True, allow_windows=True, show_progress=False)
+    solcx.set_solc_version(DEFAULT_SOLC_VERSION)
+    print(f"Solc installed successfully: {solcx.get_installed_solc_versions()}")
 except Exception as e:
     print(f"Error initializing solc: {str(e)}")
+    # Continue execution - we'll handle compilation errors in the endpoints
 
 @app.route('/', methods=['GET'])
 def connect():
     """Health check endpoint"""
-    return jsonify({"status": "Connected to the server"})
+    try:
+        # Check if solc is installed
+        versions = solcx.get_installed_solc_versions()
+        return jsonify({
+            "status": "Connected to the server",
+            "solc_versions": [str(v) for v in versions]
+        })
+    except Exception as e:
+        return jsonify({
+            "status": "Connected but solc not properly initialized",
+            "error": str(e)
+        })
 
 @app.route('/generatePS', methods=['GET'])
 def generatePS():
@@ -141,85 +151,79 @@ def validate_code():
 
 def check_solidity_compilation(code):
     try:
-        pragma_version = None
-        
-        # Extract pragma version from the code if present
-        if "pragma solidity" in code:
-            # Find the pragma line
-            pragma_lines = [line for line in code.split('\n') if "pragma solidity" in line]
-            if pragma_lines:
-                pragma_line = pragma_lines[0]
-                
-                # Extract version specification - look for standard version patterns
-                import re
-                version_patterns = [
-                    r'pragma solidity \^(\d+\.\d+\.\d+);',  # ^0.8.0
-                    r'pragma solidity >=(\d+\.\d+\.\d+);',  # >=0.8.0
-                    r'pragma solidity (\d+\.\d+\.\d+);',    # 0.8.0
-                ]
-                
-                for pattern in version_patterns:
-                    match = re.search(pattern, pragma_line)
-                    if match:
-                        pragma_version = match.group(1)
-                        break
-        
-        # Default to 0.8.0 if no version found
-        if not pragma_version:
-            pragma_version = "0.8.0"
-            code = "pragma solidity ^0.8.0;\n" + code
-        
-        # Make sure the required solc version is installed
+        # First, ensure solcx is properly initialized
         try:
-            all_versions = [str(v) for v in solcx.get_installed_solc_versions()]
-            if pragma_version not in all_versions:
-                solcx.install_solc(pragma_version)
-            
-            # Set the compiler version
-            solcx.set_solc_version(pragma_version)
-        except Exception as install_error:
+            solc_versions = solcx.get_installed_solc_versions()
+            if not solc_versions:
+                # Install the default version if none is found
+                solcx.install_solc(DEFAULT_SOLC_VERSION)
+                solcx.set_solc_version(DEFAULT_SOLC_VERSION)
+                pragma_version = DEFAULT_SOLC_VERSION
+            else:
+                # Use the first installed version
+                solcx.set_solc_version(solc_versions[0])
+                pragma_version = str(solc_versions[0])
+        except Exception as init_error:
             return {
                 "status": False,
                 "syntax_correct": False,
                 "compilable_code": False,
-                "error": f"Failed to install or set solc version: {str(install_error)}",
-                "solidity_version": pragma_version
+                "error": f"Failed to initialize solc: {str(init_error)}",
+                "solidity_version": DEFAULT_SOLC_VERSION
             }
             
-        # Compile the code
-        output = solcx.compile_source(code)
-        
-        # Check if compilation was successful by verifying output format
-        # The output should contain at least one contract with 'bin' field
-        contract_found = False
-        for key in output.keys():
-            if 'bin' in output[key]:
-                contract_found = True
-                break
-                
-        if contract_found:
-            return {
-                "status": True,
-                "syntax_correct": True,
-                "compilable_code": True,
-                "error": "",
-                "solidity_version": pragma_version
-            }
+        # Extract pragma version from the code if present
+        if "pragma solidity" in code:
+            # We'll still use our installed version rather than trying to extract and install
+            # a new one, as that's more reliable in the serverless environment
+            pass
         else:
+            # Add a default pragma if none exists
+            code = f"pragma solidity ^{pragma_version};\n" + code
+            
+        # Compile the code
+        try:
+            output = solcx.compile_source(code)
+            
+            # Check if compilation was successful by verifying output format
+            contract_found = False
+            for key in output.keys():
+                if 'bin' in output[key]:
+                    contract_found = True
+                    break
+                    
+            if contract_found:
+                return {
+                    "status": True,
+                    "syntax_correct": True,
+                    "compilable_code": True,
+                    "error": "",
+                    "solidity_version": pragma_version
+                }
+            else:
+                return {
+                    "status": False,
+                    "syntax_correct": True,
+                    "compilable_code": False,
+                    "error": "Compilation output is missing bytecode. Check contract structure.",
+                    "solidity_version": pragma_version
+                }
+        except Exception as compile_error:
             return {
                 "status": False,
-                "syntax_correct": True,
+                "syntax_correct": False,
                 "compilable_code": False,
-                "error": "Compilation output is missing bytecode. Check contract structure.",
+                "error": str(compile_error),
                 "solidity_version": pragma_version
             }
     except Exception as e:
+        # Catch-all for any other exceptions
         return {
             "status": False,
             "syntax_correct": False,
             "compilable_code": False,
-            "error": str(e),
-            "solidity_version": pragma_version if 'pragma_version' in locals() else "unknown"
+            "error": f"Unexpected error: {str(e)}",
+            "solidity_version": DEFAULT_SOLC_VERSION
         }
 
 @app.route('/suggestions', methods=['POST'])
