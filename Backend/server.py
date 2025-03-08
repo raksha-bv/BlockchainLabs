@@ -4,6 +4,11 @@ from flask_cors import CORS
 import google.generativeai as genai
 import os
 import json
+import solcx
+
+# Install and set Solidity compiler version
+solcx.install_solc("0.8.0")
+solcx.set_solc_version("0.8.0")
 
 # Load environment variables
 load_dotenv()
@@ -99,39 +104,106 @@ def generatePSA():
 
 @app.route('/validate-code', methods=['POST'])
 def validate_code():
-    """Validate Solidity code against a problem statement"""
+    """Validate if Solidity code is compilable"""
     data = request.get_json()
-    problem_statement = data.get('problem_statement', '')
     code = data.get('code', '')
     
-    prompt = f"""You are a Solidity compiler and code validator. Analyze the provided Solidity code against the problem statement.
+    # Perform actual compilation check
+    compilation_result = check_solidity_compilation(code)
+    
+    # Return just the compilation result
+    return jsonify(compilation_result)
 
-    PROBLEM STATEMENT:
-    {problem_statement}
-    
-    CODE:
-    {code}
-    
-    Your task is to validate:
-    
-    1. SYNTAX: Verify all keywords match Solidity syntax specification
-    2. STRUCTURE: Confirm proper placement of brackets, parentheses, braces, and semicolons
-    3. COMPILATION: Determine if the code would compile successfully
-    4. LANGUAGE: Verify the code is written in Solidity
-    
-    
-    Respond with a JSON object containing:
-    {{
-        "status": true/false (overall assessment of the code's validity),
-        "syntax_correct": true/false (assessment of syntax correctness),
-        "compilable_code": true/false (assessment of compilation success),
-        "error": "Detailed error message if any issues found, otherwise empty string"
-    }}
-    
-    Base your assessment ONLY on standard Solidity compilation rules and the problem requirements. If you can't determine some aspect with certainty, err on the side of caution and flag potential issues.
-    """
-    
-    return generate_ai_response(prompt)
+def check_solidity_compilation(code):
+    """Check if Solidity code compiles using solcx with dynamic version detection"""
+    try:
+        # Extract pragma version from the code if present
+        pragma_version = None
+        if "pragma solidity" in code:
+            # Find the pragma line
+            pragma_line = [line for line in code.split('\n') if "pragma solidity" in line][0]
+            
+            # Extract version specification
+            if "^" in pragma_line:
+                # Handle caret version like ^0.8.0
+                pragma_version = pragma_line.split("^")[1].split(";")[0].strip()
+            elif ">=" in pragma_line and "<" in pragma_line:
+                # Handle range like >=0.8.0 <0.9.0
+                min_version = pragma_line.split(">=")[1].split("<")[0].strip()
+                pragma_version = min_version
+            elif "=" in pragma_line:
+                # Handle exact version like =0.8.0
+                pragma_version = pragma_line.split("=")[1].split(";")[0].strip()
+            else:
+                # Handle plain version like 0.8.0
+                version_part = pragma_line.split("pragma solidity")[1].split(";")[0].strip()
+                if version_part:
+                    pragma_version = version_part
+        
+        # Default to 0.8.0 if no version found
+        if not pragma_version:
+            pragma_version = "0.8.0"
+            code = "pragma solidity ^0.8.0;\n" + code
+            
+        # Clean up version string - keep only the main version like 0.8.0
+        # This removes potential whitespace or extra characters
+        if pragma_version:
+            version_parts = [part for part in pragma_version.split('.') if part.isdigit()]
+            if len(version_parts) >= 2:
+                # Format as major.minor.patch or major.minor if patch not specified
+                if len(version_parts) >= 3:
+                    pragma_version = f"{version_parts[0]}.{version_parts[1]}.{version_parts[2]}"
+                else:
+                    pragma_version = f"{version_parts[0]}.{version_parts[1]}.0"
+            else:
+                pragma_version = "0.8.0"  # fallback if parsing fails
+        
+        # Get available installed versions
+        installed_versions = solcx.get_installed_solc_versions()
+        
+        # Install the required version if not already installed
+        if not any(str(v).startswith(pragma_version) for v in installed_versions):
+            print(f"Installing Solidity version {pragma_version}")
+            solcx.install_solc(pragma_version)
+        
+        # Set the compiler version
+        solcx.set_solc_version(pragma_version)
+            
+        # Compile the code
+        output = solcx.compile_source(code)
+        
+        # Check if compilation was successful by verifying output format
+        # The output should contain at least one contract with 'bin' field
+        contract_found = False
+        for key in output.keys():
+            if 'bin' in output[key]:
+                contract_found = True
+                break
+                
+        if contract_found:
+            return {
+                "status": True,
+                "syntax_correct": True,
+                "compilable_code": True,
+                "error": "",
+                "solidity_version": pragma_version
+            }
+        else:
+            return {
+                "status": False,
+                "syntax_correct": True,
+                "compilable_code": False,
+                "error": "Compilation output is missing bytecode. Check contract structure.",
+                "solidity_version": pragma_version
+            }
+    except Exception as e:
+        return {
+            "status": False,
+            "syntax_correct": False,
+            "compilable_code": False,
+            "error": str(e),
+            "solidity_version": pragma_version if 'pragma_version' in locals() else "unknown"
+        }
 
 @app.route('/suggestions', methods=['POST'])
 def suggestions():
@@ -191,7 +263,7 @@ def chat():
         return jsonify({'error': 'Failed to generate response'}), 500
 
 def generate_ai_response(prompt):
-    """Generic helper function to generate AI responses and process JSON"""
+    """Generate AI responses and return as jsonify response"""
     try:
         response = model.generate_content(prompt)
         text_response = response.text
@@ -221,6 +293,34 @@ def generate_ai_response(prompt):
             'error': str(e),
             'raw_text': text_response if 'text_response' in locals() else "No response generated"
         }), 500
+
+def generate_ai_response_as_dict(prompt):
+    """Generate AI responses and return as Python dictionary"""
+    try:
+        response = model.generate_content(prompt)
+        text_response = response.text
+        
+        # Clean up the response to extract only the JSON part if present
+        if '```json' in text_response:
+            # Extract text between ```json and the next ```
+            start_index = text_response.find('```json') + 7
+            end_index = text_response.find('```', start_index)
+            if end_index != -1:
+                text_response = text_response[start_index:end_index].strip()
+            else:
+                # If no ending ``` is found, just remove the start
+                text_response = text_response[start_index:].strip()
+        
+        # Try to parse the response as JSON
+        try:
+            return json.loads(text_response)
+        except json.JSONDecodeError:
+            # If JSON parsing fails, return a default dictionary
+            return {"status": False, "error": "Failed to parse AI response"}
+            
+    except Exception as e:
+        print(f"Error processing response: {str(e)}")
+        return {"status": False, "error": f"AI processing error: {str(e)}"}
 
 if __name__ == '__main__':
     app.run(port=5000, debug=True)
