@@ -6,13 +6,15 @@ from dotenv import load_dotenv
 from flask_cors import CORS
 import google.generativeai as genai
 
-# Modify this section for better serverless support
 # Load environment variables first
 load_dotenv()
 
-# Configure solcx - ensure paths are absolute
-SOLCX_PATH = os.path.join(os.getcwd(), ".solcx")
+# Configure solcx - ensure paths are absolute and install solc
+SOLCX_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".solcx")
 os.environ["SOLCX_BINARY_PATH"] = SOLCX_PATH
+
+# Ensure the solcx directory exists
+os.makedirs(SOLCX_PATH, exist_ok=True)
 
 # Configure API
 API_KEY = os.getenv("API_KEY")
@@ -25,6 +27,21 @@ model = genai.GenerativeModel("gemini-2.0-flash")
 # Create Flask app
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
+
+# Initialize solc - this is critical for Vercel
+try:
+    # Check if solc is already installed
+    solc_versions = solcx.get_installed_solc_versions()
+    if not solc_versions or "0.8.0" not in [str(v) for v in solc_versions]:
+        # Install solc 0.8.0 if not found
+        print("Installing solc 0.8.0...")
+        solcx.install_solc("0.8.0", allow_osx=True, allow_windows=True, show_progress=False)
+    
+    # Set default version
+    solcx.set_solc_version("0.8.0")
+    print(f"Solc versions available: {solcx.get_installed_solc_versions()}")
+except Exception as e:
+    print(f"Error initializing solc: {str(e)}")
 
 @app.route('/', methods=['GET'])
 def connect():
@@ -124,24 +141,50 @@ def validate_code():
 
 def check_solidity_compilation(code):
     try:
-        # Extract pragma version from the code if present
         pragma_version = None
+        
+        # Extract pragma version from the code if present
         if "pragma solidity" in code:
             # Find the pragma line
-            pragma_line = [line for line in code.split('\n') if "pragma solidity" in line][0]
-            
-            # Extract version specification - simplified for demo
-            pragma_version = "0.8.0"  # Default to 0.8.0 for simplicity
-            
-            # You may want to parse the pragma more carefully here
-            
+            pragma_lines = [line for line in code.split('\n') if "pragma solidity" in line]
+            if pragma_lines:
+                pragma_line = pragma_lines[0]
+                
+                # Extract version specification - look for standard version patterns
+                import re
+                version_patterns = [
+                    r'pragma solidity \^(\d+\.\d+\.\d+);',  # ^0.8.0
+                    r'pragma solidity >=(\d+\.\d+\.\d+);',  # >=0.8.0
+                    r'pragma solidity (\d+\.\d+\.\d+);',    # 0.8.0
+                ]
+                
+                for pattern in version_patterns:
+                    match = re.search(pattern, pragma_line)
+                    if match:
+                        pragma_version = match.group(1)
+                        break
+        
         # Default to 0.8.0 if no version found
         if not pragma_version:
             pragma_version = "0.8.0"
             code = "pragma solidity ^0.8.0;\n" + code
+        
+        # Make sure the required solc version is installed
+        try:
+            all_versions = [str(v) for v in solcx.get_installed_solc_versions()]
+            if pragma_version not in all_versions:
+                solcx.install_solc(pragma_version)
             
-        # Set the compiler version - no installation
-        solcx.set_solc_version_pragma(f"^{pragma_version}")
+            # Set the compiler version
+            solcx.set_solc_version(pragma_version)
+        except Exception as install_error:
+            return {
+                "status": False,
+                "syntax_correct": False,
+                "compilable_code": False,
+                "error": f"Failed to install or set solc version: {str(install_error)}",
+                "solidity_version": pragma_version
+            }
             
         # Compile the code
         output = solcx.compile_source(code)
