@@ -6,7 +6,7 @@ export async function POST(request: Request) {
     const { message } = await request.json();
 
     // Call your Python backend
-    const response = await fetch("http://localhost:5000/chat", {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/chat`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
