@@ -248,7 +248,40 @@ def check_solidity_compilation(code):
             "error": f"Unexpected error: {str(e)}",
             "solidity_version": DEFAULT_SOLC_VERSION
         }
+
+
+@app.route('/freestyle-suggestions', methods=['POST'])
+def freestyleSuggestions():
+    """Provide suggestions to improve Solidity code"""
+    data = request.get_json()
+    code = data.get('code', '')
     
+    prompt = f"""You are an expert Solidity mentor with years of experience in blockchain development and smart contract auditing.
+    
+    CODE:
+    {code}
+    
+    Review the Solidity code and provide structured feedback in JSON format with the values being simple short strings:
+
+    {{
+        "errors": "List of syntax errors or issues that prevent compilation",
+        "fixes": [ jsonOfFix("fixTitle" : "code_snippet - if applicable otherwise description")],
+        "improvements": "Improvements to optimize gas usage, enhance security, or follow best practices",
+        "compliments": "Compliments for well-written code or good practices",
+        "summary": "Overall assessment and key points"
+    }}
+
+    Guidelines:
+    1. **Be Specific** - Point to exact lines or functions needing attention.
+    2. **Be Educational** - Explain why a change is needed, not just what to change.
+    3. **Be Constructive** - Phrase feedback positively to encourage learning.
+    4. **Be Comprehensive** - Cover syntax, security, gas optimization, and best practices.
+
+    If the code is excellent, acknowledge it while suggesting optimizations.
+    """
+    
+    return generate_ai_response(prompt)
+
 
 
 @app.route('/suggestions', methods=['POST'])
