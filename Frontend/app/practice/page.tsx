@@ -444,7 +444,7 @@ export default function PracticePage() {
               }}
               className="hover:opacity-90 transition-opacity"
             >
-              Beginner
+              Novice
             </Button>
             <Button
               onClick={() => setProblemLevel("intermediate")}
@@ -464,7 +464,7 @@ export default function PracticePage() {
               }}
               className="hover:opacity-90 transition-opacity"
             >
-              Intermediate
+              Beginner
             </Button>
             <Button
               onClick={() => setProblemLevel("advanced")}
@@ -482,7 +482,7 @@ export default function PracticePage() {
               }}
               className="hover:opacity-90 transition-opacity"
             >
-              Advanced
+              Intermediate
             </Button>
           </div>
         </div>
