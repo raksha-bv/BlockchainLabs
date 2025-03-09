@@ -159,7 +159,7 @@ def validate_code():
     Provide your analysis in the following JSON format:
     {{
         "status": true/false,
-        "error": "Detailed explanation of how and which requirements are not met, if all requirements are met, leave it empty",
+        "error": "Detailed explanation of how and which requirements are not met, if all requirements are met, leave it empty, if no requirements are provided leave it empty",
         "syntax_correct": "true/false",
         "compilable_code": "true/false"
     }}
