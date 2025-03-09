@@ -163,6 +163,7 @@ def validate_code():
         "syntax_correct": "true/false",
         "compilable_code": "true/false"
     }}
+    
     """
         return generate_ai_response(prompt)
 
