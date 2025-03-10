@@ -3,6 +3,8 @@ import Navbar from "@/components/Navbar";
 // import HeroSection from "@/components/HeroSection";
 import ServicesSection from "@/components/ServicesSection";
 import CodeEditorDemo from "@/components/CodeEditorDemo";
+import Footer from "@/components/Footer";
+import HeroSection from "@/components/HeroSection";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -20,9 +22,10 @@ export default function Home() {
       {/* Content */}
       <div className="relative z-10">
         <Navbar />
-        {/* <HeroSection /> */}
+        <HeroSection />
         <CodeEditorDemo />
         <ServicesSection />
+        <Footer />
       </div>
     </main>
   );

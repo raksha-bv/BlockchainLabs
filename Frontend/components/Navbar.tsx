@@ -6,7 +6,7 @@ const Navbar = () => {
   const [isHovered, setIsHovered] = useState(false);
 
   return (
-    <nav className="flex justify-between items-center px-6 md:px-12 py-4 w-full">
+    <nav className="absolute top-0 left-0 z-10 flex justify-between items-center px-6 md:px-12 py-4 w-full">
       <div className="flex items-center">
         <Link
           href="/"
