@@ -3,6 +3,7 @@ import React from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import Gemini from "./ui/Gemini";
+import SolidityLogo from "./ui/Solidity";
 
 const HeroSection = () => {
   return (
@@ -196,13 +197,7 @@ const HeroSection = () => {
                   <path d="M12 0C5.4 0 0 5.4 0 12c0 5.3 3.4 9.8 8.2 11.4.6.1.8-.3.8-.6v-2c-3.3.7-4-1.6-4-1.6-.5-1.3-1.3-1.7-1.3-1.7-1.1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1.1 1.8 2.8 1.3 3.5 1 .1-.8.4-1.3.8-1.6-2.8-.3-5.6-1.4-5.6-6.1 0-1.3.5-2.4 1.2-3.3-.1-.3-.5-1.5.1-3.2 0 0 1-.3 3.3 1.2.9-.3 1.8-.4 2.8-.4s1.9.1 2.8.4c2.2-1.5 3.2-1.2 3.2-1.2.6 1.7.2 2.9.1 3.2.8.9 1.2 2 1.2 3.3 0 4.7-2.8 5.8-5.6 6.1.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6 4.8-1.6 8.2-6.1 8.2-11.4C24 5.4 18.6 0 12 0z" />
                 </svg>
                 <Gemini />
-                <svg
-                  className="h-5 text-gray-400"
-                  viewBox="0 0 24 24"
-                  fill="currentColor"
-                >
-                  <path d="M23.642 14.947l-8.21-14.32a1.06 1.06 0 00-1.832 0l-1.7 2.966L16.391 11a.82.82 0 01.287.732v.322a.82.82 0 01-.287.732l-4.491 7.407a.82.82 0 01-.732.287h-.321a.82.82 0 01-.732-.287L5.624 13a.82.82 0 010-.822l4.491-7.455a.82.82 0 01.732-.287h.321a.82.82 0 01.732.287l-4.177 7.202a.06.06 0 000 .59l3.879 6.412a.06.06 0 00.102 0l3.879-6.413a.06.06 0 000-.59l-7.504-13A1.06 1.06 0 007.148.626L.358 14.947a1.06 1.06 0 00.366 1.45l10.105 5.835a1.06 1.06 0 001.06 0l10.105-5.835c.441-.203.64-.69.366-1.45z" />
-                </svg>
+                <SolidityLogo />
               </div>
             </motion.div>
           </motion.div>
@@ -329,9 +324,9 @@ const HeroSection = () => {
 
       {/* Added animated scrolling indicator */}
       <motion.div
-        className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex flex-col items-center"
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 0.7, y: 0 }}
+        className="absolute bottom-8 left-1/2 flex flex-col justify-center items-center"
+        initial={{ opacity: 0, y: -10, x: "-50%" }}
+        animate={{ opacity: 0.7, y: 0, x: "-50%" }}
         transition={{ delay: 2, duration: 0.5 }}
       >
         <span className="text-xs text-gray-400 mb-2">Scroll to explore</span>
