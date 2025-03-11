@@ -324,9 +324,9 @@ const HeroSection = () => {
 
       {/* Added animated scrolling indicator */}
       <motion.div
-        className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex flex-col items-center"
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 0.7, y: 0 }}
+        className="absolute bottom-8 left-1/2 flex flex-col justify-center items-center"
+        initial={{ opacity: 0, y: -10, x: "-50%" }}
+        animate={{ opacity: 0.7, y: 0, x: "-50%" }}
         transition={{ delay: 2, duration: 0.5 }}
       >
         <span className="text-xs text-gray-400 mb-2">Scroll to explore</span>
