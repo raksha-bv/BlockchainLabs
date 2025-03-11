@@ -5,6 +5,7 @@ import ServicesSection from "@/components/ServicesSection";
 import CodeEditorDemo from "@/components/CodeEditorDemo";
 import Footer from "@/components/Footer";
 import HeroSection from "@/components/HeroSection";
+import CTASection from "@/components/CTASection";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -25,6 +26,7 @@ export default function Home() {
         <HeroSection />
         <CodeEditorDemo />
         <ServicesSection />
+        <CTASection />
         <Footer />
       </div>
     </main>
