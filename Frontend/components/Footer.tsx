@@ -203,7 +203,7 @@ const Footer = () => {
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.3 }}
         >
-          <div className="flex flex-col md:flex-row items-center">
+          <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="md:w-1/2 mb-4 md:mb-0">
               <h3 className="text-base font-bold mb-1">Stay Updated</h3>
               <p className="text-gray-400 text-sm">
@@ -212,7 +212,7 @@ const Footer = () => {
               </p>
             </div>
             <div className="md:w-1/2">
-              <div className="flex flex-col sm:flex-row">
+              <div className="flex flex-col justify-end sm:flex-row">
                 <input
                   type="email"
                   placeholder="Your email address"
