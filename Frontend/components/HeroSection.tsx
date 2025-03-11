@@ -10,7 +10,7 @@ const HeroSection = () => {
       {/* Updated Background to match CodeEditorDemo */}
       <div className="absolute inset-0 backdrop-blur z-0">
         <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(ellipse_at_top_right,_rgba(124,58,237,0.15),transparent_70%)]"></div>
-        <div className="absolute bottom-0 right-0 w-full h-full bg-[radial-gradient(ellipse_at_bottom_left,_rgba(124,58,237,0.1),transparent_70%)]"></div>
+        {/* <div className="absolute bottom-0 right-0 w-full h-full bg-[radial-gradient(ellipse_at_bottom_left,_rgba(124,58,237,0.1),transparent_70%)]"></div> */}
 
         {/* Grid pattern */}
         <div
@@ -24,7 +24,7 @@ const HeroSection = () => {
 
         {/* Animated floating particles */}
         <div className="absolute inset-0 overflow-hidden">
-          {[...Array(12)].map((_, i) => (
+          {[...Array(50)].map((_, i) => (
             <motion.div
               key={i}
               className="absolute w-1 h-1 rounded-full bg-violet-400/30"
