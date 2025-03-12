@@ -25,7 +25,7 @@ const courses: Course[] = [
       "Learn the fundamentals of Solidity programming and smart contract development for blockchain applications.",
     level: "Beginner",
     duration: "3 days",
-    lessonCount: 8,
+    lessonCount: 7,
     image: "/solidity.png",
   },
   // Additional courses can be easily added here
