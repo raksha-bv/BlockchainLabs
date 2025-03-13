@@ -247,7 +247,7 @@ export default function PracticePage() {
 
             <Button
               onClick={() => {
-                setProblemLevel("beginner");
+                // setProblemLevel("beginner");
                 fetchProblem("beginner");
               }}
               variant={problemLevel === "beginner" ? "default" : "outline"}
@@ -268,7 +268,7 @@ export default function PracticePage() {
             </Button>
             <Button
               onClick={() => {
-                setProblemLevel("intermediate");
+                // setProblemLevel("intermediate");
                 fetchProblem("intermediate");
               }}
               variant={problemLevel === "intermediate" ? "default" : "outline"}
@@ -291,7 +291,7 @@ export default function PracticePage() {
             </Button>
             <Button
               onClick={() => {
-                setProblemLevel("advanced");
+                // setProblemLevel("advanced");
                 fetchProblem("advanced");
               }}
               variant={problemLevel === "advanced" ? "default" : "outline"}
