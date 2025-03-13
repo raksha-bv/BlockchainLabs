@@ -135,16 +135,15 @@ export default function PracticePage() {
     }
   };
   useEffect(() => {
-    fetchProblem(problemLevel);
+    // fetchProblem(problemLevel);
 
     // Ensure body has overflow hidden
     document.body.style.overflow = "hidden";
     document.documentElement.style.overflow = "hidden";
 
-    // Disable copy paste
+    // Disable copy-paste
     const preventCopyPaste = (e: ClipboardEvent) => {
       e.preventDefault();
-      return false;
     };
 
     document.addEventListener("copy", preventCopyPaste);
@@ -152,14 +151,13 @@ export default function PracticePage() {
     document.addEventListener("cut", preventCopyPaste);
 
     return () => {
-      // Clean up when component unmounts
       document.body.style.overflow = "";
       document.documentElement.style.overflow = "";
       document.removeEventListener("copy", preventCopyPaste);
       document.removeEventListener("paste", preventCopyPaste);
       document.removeEventListener("cut", preventCopyPaste);
     };
-  }, [problemLevel]);
+  }, [problemLevel]); // Only depends on problemLevel
 
   const validateCode = async () => {
     if (!problemStatement) return;
@@ -247,7 +245,7 @@ export default function PracticePage() {
 
             <Button
               onClick={() => {
-                // setProblemLevel("beginner");
+                setProblemLevel("beginner");
                 fetchProblem("beginner");
               }}
               variant={problemLevel === "beginner" ? "default" : "outline"}
@@ -268,7 +266,7 @@ export default function PracticePage() {
             </Button>
             <Button
               onClick={() => {
-                // setProblemLevel("intermediate");
+                setProblemLevel("intermediate");
                 fetchProblem("intermediate");
               }}
               variant={problemLevel === "intermediate" ? "default" : "outline"}
@@ -291,7 +289,7 @@ export default function PracticePage() {
             </Button>
             <Button
               onClick={() => {
-                // setProblemLevel("advanced");
+                setProblemLevel("advanced");
                 fetchProblem("advanced");
               }}
               variant={problemLevel === "advanced" ? "default" : "outline"}
