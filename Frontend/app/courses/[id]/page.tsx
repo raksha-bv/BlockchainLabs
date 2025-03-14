@@ -3,7 +3,16 @@ import React, { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Head from "next/head";
 import Link from "next/link";
-import { ChevronLeft, Menu, X, Moon, Sun } from "lucide-react";
+import {
+  ChevronLeft,
+  Menu,
+  X,
+  Moon,
+  Sun,
+  Book,
+  Clock,
+  Users,
+} from "lucide-react";
 import type { Course } from "../page";
 import ReactMarkdown from "react-markdown";
 import rehypeRaw from "rehype-raw";
@@ -19,6 +28,8 @@ const solidityCourse = {
   level: "Beginner" as "Beginner",
   duration: "4 weeks",
   lessonCount: 7,
+  tags: ["solidity", "basics"],
+  popularity: 1,
   image: "/images/solidity-basics.png",
   lessons: [
     {
@@ -544,61 +555,11 @@ export default function CourseDetailPage({
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [course, setCourse] = useState<CourseWithLessons | null>(null);
   const [currentLesson, setCurrentLesson] = useState<Lesson | null>(null);
-  const [darkMode, setDarkMode] = useState(false);
-  const [theme, setTheme] = useState<ThemeMode>("dark");
+  const [darkMode, setDarkMode] = useState(true);
 
-  // Dark mode colors (matching the chatbot page)
-  const darkColors = {
-    primary: "#7C3AED", // Violet-600
-    primaryHover: "#6D28D9", // Violet-700
-    accent: "#8B5CF6", // Violet-500
-    background: "#0F0F0F", // Near black
-    cardBg: "#1A1A1A", // Dark gray
-    cardBgSecondary: "#212121", // Slightly lighter dark gray
-    borderColor: "#2D2D2D", // Medium gray
-    accentBorder: "#7C3AED", // Violet-600
-    textPrimary: "#F9FAFB", // Gray-50
-    textSecondary: "#E5E7EB", // Gray-200
-    textMuted: "#9CA3AF", // Gray-400
-    textAccent: "#A78BFA", // Violet-400
-  };
-  const lightColors = {
-    primary: "#7C3AED", // Keep violet as primary
-    primaryHover: "#6D28D9", // Violet-700
-    accent: "#111111", // Black accent
-    background: "#F2E8FF", // Warmer pastel violet background
-    cardBg: "#FAF3FF", // Warmer, lighter pastel violet for cards
-    cardBgSecondary: "#EBE0FF", // Warmer secondary violet
-    borderColor: "#D8CAF0", // Warmer violet border
-    accentBorder: "#111111", // Black accent border
-    textPrimary: "#2D2235", // Warm dark violet, almost black
-    textSecondary: "#4A3960", // Warmer dark violet for secondary text
-    textMuted: "#786A92", // Warmer medium violet for muted text
-    textAccent: "#111111", // Black accent text
-  };
-  // Get current theme colors
-  const colors = theme === "dark" ? darkColors : lightColors;
-
-  // Apply dark mode class to document
-  useEffect(() => {
-    if (darkMode) {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-    }
-  }, [darkMode]);
-  const toggleTheme = () => {
-    setTheme(theme === "dark" ? "light" : "dark");
-  };
-  useEffect(() => {
-    if (theme === "dark") {
-      document.documentElement.classList.add("dark");
-      document.documentElement.classList.remove("light");
-    } else {
-      document.documentElement.classList.add("light");
-      document.documentElement.classList.remove("dark");
-    }
-  }, [theme]);
+  // Get current lesson index
+  const currentLessonIndex =
+    course?.lessons.findIndex((l) => l.id === currentLesson?.id) ?? 0;
 
   useEffect(() => {
     // Fetch course data based on the route id
@@ -629,139 +590,119 @@ export default function CourseDetailPage({
     router.push(`/courses/${id}?lessonId=${lesson.id}`);
   };
 
+  // Get difficulty color based on level
+  const getDifficultyColor = (level: string) => {
+    switch (level) {
+      case "Beginner":
+        return "text-green-400 bg-green-400/20";
+      case "Intermediate":
+        return "text-blue-400 bg-blue-400/20";
+      case "Advanced":
+        return "text-violet-400 bg-violet-400/20";
+      default:
+        return "text-gray-400 bg-gray-400/20";
+    }
+  };
+
   if (!course || !currentLesson) {
     return (
-      <div
-        className="min-h-screen flex items-center justify-center"
-        style={{
-          backgroundColor: colors.background,
-        }}
-      >
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-pastel-purple"></div>
+      <div className="min-h-screen flex items-center justify-center bg-gray-950">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-violet-500"></div>
       </div>
     );
   }
 
   return (
-    <div
-      className={`min-h-screen flex flex-col bg-grid-pattern ${
-        darkMode ? "dark" : ""
-      }`}
-      style={{
-        backgroundColor: colors.background,
-        color: colors.textPrimary,
-      }}
-    >
-      <Head>
-        <title>{course.title} | Blockchain Learning Platform</title>
-        <meta name="description" content={course.description} />
-      </Head>
+    <div className="min-h-screen bg-gray-950 text-gray-100">
+      {/* Background gradients */}
+      <div className="absolute inset-0 z-0">
+        <div className="absolute top-0 right-0 w-full h-full bg-[radial-gradient(ellipse_at_top_left,_rgba(124,58,237,0.15),transparent_70%)]"></div>
+        <div className="absolute bottom-0 left-0 w-full h-full bg-[radial-gradient(ellipse_at_bottom_right,_rgba(124,58,237,0.1),transparent_70%)]"></div>
+      </div>
 
       {/* Header */}
-      <header
-        className="py-4 px-6 flex justify-between items-center border-b"
-        style={{ borderColor: colors.borderColor }}
-      >
-        <div className="flex items-center">
-          <Link
-            href="/courses"
-            className="mr-4 hover:text-pastel-purple transition-colors"
-            style={{ color: colors.textMuted }}
-          >
-            <ChevronLeft className="w-5 h-5" />
-          </Link>
-          <h1
-            className="text-xl font-bold"
-            style={{ color: colors.textAccent }}
-          >
-            {course.title}
-          </h1>
-        </div>
-        <div className="flex items-center gap-4">
-          {/* Dark Mode Toggle Button */}
-          <button
-            onClick={toggleTheme}
-            className="p-2 rounded-full transition-colors duration-300"
-            style={{
-              backgroundColor: colors.cardBgSecondary,
-              color: colors.textAccent,
-            }}
-            aria-label={
-              theme === "dark" ? "Switch to light mode" : "Switch to dark mode"
-            }
-          >
-            {theme === "dark" ? <Sun size={20} /> : <Moon size={20} />}
-          </button>
+      <header className="relative z-10 py-4 px-6 border-b border-violet-900/30 backdrop-blur-sm bg-gray-900/60">
+        <div className="max-w-6xl mx-auto flex justify-between items-center">
+          <div className="flex items-center">
+            <Link
+              href="/courses"
+              className="mr-4 text-gray-400 hover:text-violet-400 transition-colors"
+              aria-label="Back to courses"
+            >
+              <ChevronLeft className="w-5 h-5" />
+            </Link>
+            <h1 className="text-xl font-bold text-white">{course.title}</h1>
+            <span
+              className={`ml-3 text-xs font-medium px-2 py-0.5 rounded-full ${getDifficultyColor(
+                course.level
+              )}`}
+            >
+              {course.level}
+            </span>
+          </div>
+          <div className="flex items-center gap-4">
+            {/* Dark Mode Toggle Button - purely decorative in this implementation */}
+            <button
+              onClick={() => setDarkMode(!darkMode)}
+              className="p-2 rounded-full transition-colors duration-300 bg-gray-800 text-gray-300 hover:bg-gray-700"
+              aria-label="Toggle theme"
+            >
+              {darkMode ? <Sun size={20} /> : <Moon size={20} />}
+            </button>
 
-          {/* Sidebar Toggle Button */}
-          <button
-            onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="lg:hidden p-2 rounded-lg transition-colors"
-            style={{
-              backgroundColor: colors.cardBgSecondary,
-              color: colors.textAccent,
-            }}
-            aria-label={sidebarOpen ? "Close sidebar" : "Open sidebar"}
-          >
-            {sidebarOpen ? (
-              <X className="w-5 h-5" />
-            ) : (
-              <Menu className="w-5 h-5" />
-            )}
-          </button>
+            {/* Sidebar Toggle Button */}
+            <button
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              className="lg:hidden p-2 rounded-lg transition-colors bg-gray-800 text-gray-300 hover:bg-gray-700"
+              aria-label={sidebarOpen ? "Close sidebar" : "Open sidebar"}
+            >
+              {sidebarOpen ? (
+                <X className="w-5 h-5" />
+              ) : (
+                <Menu className="w-5 h-5" />
+              )}
+            </button>
+          </div>
         </div>
       </header>
 
-      <div className="flex flex-1 overflow-hidden">
+      <div className="relative z-10 flex flex-1 overflow-hidden">
         {/* Sidebar */}
         <aside
-          className={`w-64 border-r flex-shrink-0 transition-all duration-300 overflow-y-auto lg:translate-x-0 absolute lg:relative z-10 h-[calc(100vh-4rem)]`}
-          style={{
-            backgroundColor: colors.cardBg,
-            borderColor: colors.borderColor,
-            transform: sidebarOpen ? "translateX(0)" : "translateX(-100%)",
-          }}
+          className={`w-64 border-r border-violet-900/30 flex-shrink-0 transition-all duration-300 lg:translate-x-0 absolute lg:relative z-20 h-[calc(100vh-4rem)] bg-gray-900/80 backdrop-blur-sm overflow-hidden ${
+            sidebarOpen ? "translate-x-0" : "-translate-x-full"
+          }`}
         >
-          <div
-            className="p-4 border-b"
-            style={{
-              borderColor: colors.borderColor,
-            }}
-          >
-            <h2
-              className="font-bold text-lg"
-              style={{ color: colors.textPrimary }}
-            >
-              Course Content
-            </h2>
-            <p className="text-sm mt-1" style={{ color: colors.textMuted }}>
-              {course.lessonCount} lessons
-            </p>
+          <div className="p-4 border-b border-violet-900/30">
+            <div className="flex justify-between items-center">
+              <h2 className="font-bold text-lg text-white">Course Content</h2>
+              <span className="bg-violet-900/30 text-violet-400 text-xs font-medium px-2 py-0.5 rounded-full">
+                {course.lessonCount} lessons
+              </span>
+            </div>
+            <div className="flex items-center mt-2 text-sm text-gray-400">
+              <Clock className="w-4 h-4 mr-1" />
+              {course.duration}
+            </div>
           </div>
-          <nav className="p-2">
+          <nav className="p-3 h-full overflow-y-auto">
             {course.lessons.map((lesson, index) => (
               <button
                 key={lesson.id}
-                className="w-full text-left p-3 rounded-lg mb-1 transition-colors duration-300"
-                style={{
-                  backgroundColor:
-                    currentLesson.id === lesson.id
-                      ? `${colors.primary}30`
-                      : "transparent",
-                  color:
-                    currentLesson.id === lesson.id
-                      ? colors.textPrimary
-                      : colors.textSecondary,
-                }}
+                className={`w-full text-left p-3 rounded-lg mb-2 transition-colors duration-300 ${
+                  currentLesson.id === lesson.id
+                    ? "bg-violet-900/30 text-white"
+                    : "hover:bg-gray-800/60 text-gray-300"
+                }`}
                 onClick={() => handleLessonChange(lesson)}
               >
                 <div className="flex items-center">
                   <span
-                    className="w-6 h-6 rounded-full flex items-center justify-center text-xs mr-3 transition-colors duration-300"
-                    style={{
-                      backgroundColor: colors.cardBgSecondary,
-                      color: colors.textMuted,
-                    }}
+                    className={`w-6 h-6 rounded-full flex items-center justify-center text-xs mr-3 ${
+                      currentLesson.id === lesson.id
+                        ? "bg-violet-700 text-white"
+                        : "bg-gray-800 text-gray-400"
+                    }`}
                   >
                     {index + 1}
                   </span>
@@ -771,153 +712,188 @@ export default function CourseDetailPage({
             ))}
           </nav>
         </aside>
-        {/* Main Content */}
-        <main
-          className="flex-1 overflow-y-auto p-6 transition-colors duration-300"
-          style={{
-            backgroundColor: colors.background,
-          }}
-        >
-          <article
-            className="max-w-3xl mx-auto"
-            style={{ color: colors.textPrimary }}
-          >
-            {/* Styling for markdown with theme-aware colors */}
-            <div
-              className="markdown-body"
-              style={{
-                color: colors.textPrimary,
-                // Custom CSS variables need to be defined using the proper syntax
-                // for TypeScript - as a Record<string, string>
-                ["--heading-color" as string]: colors.primary,
-                ["--link-color" as string]: colors.primary,
-                ["--code-bg" as string]:
-                  theme === "dark"
-                    ? colors.cardBgSecondary
-                    : colors.cardBgSecondary,
-                ["--code-color" as string]:
-                  theme === "dark" ? colors.textSecondary : colors.textPrimary,
-                ["--border-color" as string]: colors.borderColor,
-              }}
-            >
-              <ReactMarkdown
-                rehypePlugins={[rehypeRaw, rehypeHighlight]}
-                remarkPlugins={[remarkGfm]}
-                components={{
-                  h1: ({ node, ...props }) => (
-                    <h1
-                      style={{ color: colors.primary }}
-                      className="text-3xl font-bold mb-4"
-                      {...props}
-                    />
-                  ),
-                  h2: ({ node, ...props }) => (
-                    <h2
-                      style={{ color: colors.primary }}
-                      className="text-2xl font-bold mt-8 mb-4"
-                      {...props}
-                    />
-                  ),
-                  h3: ({ node, ...props }) => (
-                    <h3
-                      style={{ color: colors.primary }}
-                      className="text-xl font-bold mt-6 mb-3"
-                      {...props}
-                    />
-                  ),
-                  p: ({ node, ...props }) => <p className="mb-4" {...props} />,
-                  ul: ({ node, ...props }) => (
-                    <ul className="ml-6 mb-4 list-disc" {...props} />
-                  ),
-                  ol: ({ node, ...props }) => (
-                    <ol className="ml-6 mb-4 list-decimal" {...props} />
-                  ),
-                  li: ({ node, ...props }) => (
-                    <li className="mb-1" {...props} />
-                  ),
-                  a: ({ node, ...props }) => (
-                    <a
-                      style={{ color: colors.primary }}
-                      className="underline hover:opacity-80"
-                      {...props}
-                    />
-                  ),
-                  // Fix for the code component - we need to properly type check the inline prop
-                  code: ({ node, className, ...props }) => {
-                    // Check if this is an inline code block by looking at the className or other properties
-                    const isInline =
-                      !className || !className.includes("language-");
 
-                    return isInline ? (
-                      <code
-                        style={{
-                          backgroundColor: colors.cardBgSecondary,
-                          color: colors.textSecondary,
-                        }}
-                        className="px-1 py-0.5 rounded text-sm"
+        {/* Main Content */}
+        <main className="flex-1 overflow-y-auto relative z-10 h-[calc(100vh-4rem)]">
+          {/* Backdrop overlay when sidebar is open on mobile */}
+          {sidebarOpen && (
+            <div
+              className="fixed inset-0 bg-black/50 z-10 lg:hidden"
+              onClick={() => setSidebarOpen(false)}
+            ></div>
+          )}
+
+          <div className="max-w-3xl mx-auto px-6 py-8">
+            {/* Course progress */}
+            <div className="mb-8">
+              <div className="flex items-center justify-between mb-2">
+                <h2 className="text-sm font-medium text-gray-400">
+                  Lesson {currentLessonIndex + 1} of {course.lessons.length}
+                </h2>
+                <div className="flex items-center">
+                  <Book className="w-4 h-4 mr-1 text-violet-400" />
+                  <span className="text-sm text-violet-400">
+                    {Math.round(
+                      ((currentLessonIndex + 1) / course.lessons.length) * 100
+                    )}
+                    % Complete
+                  </span>
+                </div>
+              </div>
+              <div className="w-full bg-gray-800 rounded-full h-1.5">
+                <div
+                  className="bg-violet-600 h-1.5 rounded-full"
+                  style={{
+                    width: `${
+                      ((currentLessonIndex + 1) / course.lessons.length) * 100
+                    }%`,
+                  }}
+                ></div>
+              </div>
+            </div>
+
+            {/* Title card */}
+            <div className="bg-gray-900/60 border border-violet-900/30 rounded-lg p-6 mb-8">
+              <h1 className="text-2xl font-bold text-white mb-1">
+                {currentLesson.title}
+              </h1>
+              <p className="text-gray-400">
+                Learn at your own pace and master the concepts
+              </p>
+            </div>
+
+            {/* Markdown content */}
+            <article className="prose prose-invert prose-violet max-w-none bg-gray-900/60 border border-violet-900/30 rounded-lg p-6">
+              <div className="markdown-body">
+                <ReactMarkdown
+                  rehypePlugins={[rehypeRaw, rehypeHighlight]}
+                  remarkPlugins={[remarkGfm]}
+                  components={{
+                    h1: ({ node, ...props }) => (
+                      <h1
+                        className="text-2xl font-bold mb-4 text-violet-400"
                         {...props}
                       />
-                    ) : (
-                      <div
-                        style={{
-                          backgroundColor: colors.cardBgSecondary,
-                          borderColor: colors.borderColor,
-                        }}
-                        className="rounded-lg p-4 mb-4 border overflow-x-auto"
-                      >
+                    ),
+                    h2: ({ node, ...props }) => (
+                      <h2
+                        className="text-xl font-bold mt-8 mb-4 text-violet-400"
+                        {...props}
+                      />
+                    ),
+                    h3: ({ node, ...props }) => (
+                      <h3
+                        className="text-lg font-bold mt-6 mb-3 text-violet-400"
+                        {...props}
+                      />
+                    ),
+                    p: ({ node, ...props }) => (
+                      <p className="mb-4 text-gray-300" {...props} />
+                    ),
+                    ul: ({ node, ...props }) => (
+                      <ul
+                        className="ml-6 mb-4 list-disc text-gray-300"
+                        {...props}
+                      />
+                    ),
+                    ol: ({ node, ...props }) => (
+                      <ol
+                        className="ml-6 mb-4 list-decimal text-gray-300"
+                        {...props}
+                      />
+                    ),
+                    li: ({ node, ...props }) => (
+                      <li className="mb-1 text-gray-300" {...props} />
+                    ),
+                    a: ({ node, ...props }) => (
+                      <a
+                        className="text-violet-400 underline hover:text-violet-300"
+                        {...props}
+                      />
+                    ),
+                    code: ({ node, className, ...props }) => {
+                      const isInline =
+                        !className || !className.includes("language-");
+                      return isInline ? (
                         <code
-                          style={{ color: colors.textSecondary }}
-                          className={`block text-sm ${className}`}
+                          className="px-1 py-0.5 rounded text-sm bg-gray-800 text-gray-300"
                           {...props}
                         />
-                      </div>
-                    );
-                  },
-                }}
-              >
-                {currentLesson.content}
-              </ReactMarkdown>
+                      ) : (
+                        <div className="bg-gray-800 border border-gray-700 rounded-lg p-4 mb-4 overflow-x-auto">
+                          <code
+                            className={`block text-sm text-gray-300 ${className}`}
+                            {...props}
+                          />
+                        </div>
+                      );
+                    },
+                  }}
+                >
+                  {currentLesson.content}
+                </ReactMarkdown>
+              </div>
+            </article>
+
+            {/* Navigation buttons */}
+            <div className="mt-8 flex justify-between">
+              {currentLessonIndex > 0 ? (
+                <button
+                  className="px-4 py-2 rounded-lg transition-colors bg-gray-800 text-gray-300 hover:bg-gray-700 flex items-center"
+                  onClick={() =>
+                    handleLessonChange(course.lessons[currentLessonIndex - 1])
+                  }
+                >
+                  <ChevronLeft className="w-5 h-5 mr-2" />
+                  Previous Lesson
+                </button>
+              ) : (
+                <div></div> // Empty div to maintain the space for flexbox
+              )}
+
+              {currentLessonIndex < course.lessons.length - 1 && (
+                <button
+                  className="px-4 py-2 rounded-lg transition-colors bg-violet-700 hover:bg-violet-600 text-white flex items-center ml-auto"
+                  onClick={() =>
+                    handleLessonChange(course.lessons[currentLessonIndex + 1])
+                  }
+                >
+                  Next Lesson
+                  <ChevronLeft className="w-5 h-5 ml-2 rotate-180" />
+                </button>
+              )}
             </div>
-          </article>
 
-          {/* Navigation buttons */}
-          <div className="max-w-3xl mx-auto mt-12 flex justify-between">
-            {course.lessons.indexOf(currentLesson) > 0 && (
-              <button
-                className="px-4 py-2 rounded-lg transition-colors duration-300 flex items-center"
-                style={{
-                  backgroundColor: colors.cardBg,
-                  color: colors.textPrimary,
-                }}
-                onClick={() =>
-                  handleLessonChange(
-                    course.lessons[course.lessons.indexOf(currentLesson) - 1]
-                  )
-                }
-              >
-                <ChevronLeft className="w-5 h-5 mr-2" />
-                Previous Lesson
-              </button>
-            )}
-
-            {course.lessons.indexOf(currentLesson) <
-              course.lessons.length - 1 && (
-              <button
-                className="px-4 py-2 rounded-lg transition-colors duration-300 flex items-center ml-auto"
-                style={{
-                  backgroundColor: colors.primary,
-                  color: theme === "dark" ? colors.textPrimary : "#ffffff",
-                }}
-                onClick={() =>
-                  handleLessonChange(
-                    course.lessons[course.lessons.indexOf(currentLesson) + 1]
-                  )
-                }
-              >
-                Next Lesson
-                <ChevronLeft className="w-5 h-5 ml-2 rotate-180" />
-              </button>
-            )}
+            {/* Additional info card */}
+            <div className="mt-8 bg-gray-900/60 border border-violet-900/30 rounded-lg p-6">
+              <h3 className="text-lg font-bold text-white mb-3">
+                Learning Resources
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="flex items-start">
+                  <div className="p-2 rounded-lg bg-violet-900/30 mr-3">
+                    <Book className="w-5 h-5 text-violet-400" />
+                  </div>
+                  <div>
+                    <h4 className="font-medium text-white">Documentation</h4>
+                    <p className="text-sm text-gray-400">
+                      Access official resources and references
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-start">
+                  <div className="p-2 rounded-lg bg-violet-900/30 mr-3">
+                    <Users className="w-5 h-5 text-violet-400" />
+                  </div>
+                  <div>
+                    <h4 className="font-medium text-white">Community</h4>
+                    <p className="text-sm text-gray-400">
+                      Join discussions and get help from others
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </main>
       </div>
