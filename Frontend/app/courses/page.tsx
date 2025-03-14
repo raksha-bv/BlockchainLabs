@@ -1,9 +1,21 @@
 "use client";
-import { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import Head from "next/head";
 import Link from "next/link";
-import { Moon, Sun } from "lucide-react";
+import {
+  Moon,
+  Sun,
+  Clock,
+  Book,
+  Search,
+  ChevronRight,
+  Filter,
+  Code,
+  Users,
+  Zap,
+  Award,
+} from "lucide-react";
+import Navbar from "@/components/Navbar";
 
 // Course type definition
 export interface Course {
@@ -14,63 +26,93 @@ export interface Course {
   duration: string;
   lessonCount: number;
   image: string;
+  tags: string[];
+  popularity: number;
 }
 
-// Sample courses data
+// Course data
 const courses: Course[] = [
   {
     id: "basics-of-solidity",
     title: "Basics of Solidity",
     description:
-      "Learn the fundamentals of Solidity programming and smart contract development for blockchain applications.",
+      "Learn the fundamentals of Solidity programming and smart contract development for blockchain applications. Perfect for beginners who want to start their blockchain journey.",
     level: "Beginner",
-    duration: "3 days",
+    duration: "3 weeks",
     lessonCount: 7,
     image: "/solidity.png",
+    tags: ["Solidity", "Smart Contracts", "Ethereum"],
+    popularity: 4280,
   },
-  // Additional courses can be easily added here
   {
     id: "advanced-smart-contracts",
     title: "Advanced Smart Contracts",
     description:
-      "Dive deeper into complex smart contract patterns, security considerations, and optimization techniques.",
+      "Dive deeper into complex smart contract patterns, security considerations, and optimization techniques. Learn gas optimization, security auditing, and advanced contract patterns.",
     level: "Intermediate",
     duration: "6 weeks",
     lessonCount: 15,
     image: "",
+    tags: ["Security", "Gas Optimization", "Design Patterns"],
+    popularity: 2150,
   },
   {
     id: "defi-development",
     title: "DeFi Protocol Development",
     description:
-      "Build decentralized finance applications including lending protocols, exchanges, and yield farming systems.",
+      "Build decentralized finance applications including lending protocols, exchanges, and yield farming systems. Master the concepts behind modern DeFi architecture.",
     level: "Advanced",
     duration: "8 weeks",
     lessonCount: 20,
     image: "",
+    tags: ["DeFi", "Lending", "DEX"],
+    popularity: 1800,
+  },
+  {
+    id: "nft-marketplace",
+    title: "NFT Marketplace Creation",
+    description:
+      "Learn to build a complete NFT marketplace from scratch. Understand token standards, metadata storage, and marketplace smart contracts for buying and selling digital assets.",
+    level: "Intermediate",
+    duration: "5 weeks",
+    lessonCount: 12,
+    image: "",
+    tags: ["NFTs", "ERC-721", "IPFS"],
+    popularity: 3600,
+  },
+  {
+    id: "blockchain-security",
+    title: "Blockchain Security Fundamentals",
+    description:
+      "Learn to identify and prevent common vulnerabilities in smart contracts. Study real-world exploits and implement secure coding practices for blockchain applications.",
+    level: "Advanced",
+    duration: "4 weeks",
+    lessonCount: 10,
+    image: "",
+    tags: ["Security", "Auditing", "Bug Bounty"],
+    popularity: 2800,
+  },
+  {
+    id: "web3-integration",
+    title: "Web3 Frontend Integration",
+    description:
+      "Connect your frontend applications to blockchain networks. Learn to use Web3.js, ethers.js, and other libraries to build decentralized application interfaces.",
+    level: "Beginner",
+    duration: "4 weeks",
+    lessonCount: 8,
+    image: "",
+    tags: ["Web3.js", "React", "dApps"],
+    popularity: 3200,
   },
 ];
 
 export default function CoursesPage() {
   const [searchTerm, setSearchTerm] = useState("");
+  const [filter, setFilter] = useState<
+    "all" | "Beginner" | "Intermediate" | "Advanced"
+  >("all");
   const [darkMode, setDarkMode] = useState(false);
   const router = useRouter();
-
-  // Dark mode colors (matching the chatbot app)
-  const darkColors = {
-    primary: "#7C3AED", // Violet-600
-    primaryHover: "#6D28D9", // Violet-700
-    accent: "#8B5CF6", // Violet-500
-    background: "#0F0F0F", // Near black
-    cardBg: "#1A1A1A", // Dark gray
-    cardBgSecondary: "#212121", // Slightly lighter dark gray
-    borderColor: "#2D2D2D", // Medium gray
-    accentBorder: "#7C3AED", // Violet-600
-    textPrimary: "#F9FAFB", // Gray-50
-    textSecondary: "#E5E7EB", // Gray-200
-    textMuted: "#9CA3AF", // Gray-400
-    textAccent: "#A78BFA", // Violet-400
-  };
 
   // Apply dark mode class to document
   useEffect(() => {
@@ -96,377 +138,266 @@ export default function CoursesPage() {
     localStorage.setItem("theme", darkMode ? "dark" : "light");
   }, [darkMode]);
 
-  // Filter courses based on search term
+  // Filter courses based on search term and level filter
   const filteredCourses = courses.filter(
     (course) =>
-      course.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      course.description.toLowerCase().includes(searchTerm.toLowerCase())
+      (filter === "all" || course.level === filter) &&
+      (course.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        course.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        course.tags.some((tag) =>
+          tag.toLowerCase().includes(searchTerm.toLowerCase())
+        ))
   );
 
+  // Get difficulty color based on level
+  const getDifficultyColor = (level: string) => {
+    switch (level) {
+      case "Beginner":
+        return "text-green-400 bg-green-400/20";
+      case "Intermediate":
+        return "text-blue-400 bg-blue-400/20";
+      case "Advanced":
+        return "text-violet-400 bg-violet-400/20";
+      default:
+        return "text-gray-400 bg-gray-400/20";
+    }
+  };
+
   return (
-    <main
-      className={`min-h-screen flex flex-col items-center bg-grid-pattern ${
-        darkMode ? "dark" : ""
-      }`}
-      style={
-        darkMode
-          ? { backgroundColor: darkColors.background }
-          : { backgroundColor: "#f9fafb" }
-      }
-    >
-      <Head>
-        <title>Courses | Blockchain Learning Platform</title>
-        <meta
-          name="description"
-          content="Learn blockchain development through interactive courses"
-        />
-      </Head>
+    <div className="min-h-screen bg-gray-950 text-gray-100">
+      {/* Simplified background */}
+      <div className="absolute inset-0 z-0">
+        <div className="absolute top-0 right-0 w-full h-full bg-[radial-gradient(ellipse_at_top_left,_rgba(124,58,237,0.15),transparent_70%)]"></div>
+        <div className="absolute bottom-0 left-0 w-full h-full bg-[radial-gradient(ellipse_at_bottom_right,_rgba(124,58,237,0.1),transparent_70%)]"></div>
+      </div>
 
-      <div className="z-10 w-full max-w-7xl">
-        {/* Header */}
-        <header
-          className="py-4 px-6 flex justify-between items-center border-b sticky top-0"
-          style={
-            darkMode
-              ? {
-                  borderColor: darkColors.borderColor,
-                  backgroundColor: `${darkColors.background}20`,
-                }
-              : {
-                  borderColor: "rgb(229, 231, 235)",
-                  backgroundColor: "rgba(255, 255, 255, 0.2)",
-                }
-          }
-        >
-          <h1
-            className="text-2xl font-bold"
-            style={
-              darkMode
-                ? { color: darkColors.textSecondary }
-                : {
-                    backgroundImage:
-                      "linear-gradient(to right, #C1A5E1, #A7C7E7)",
-                    WebkitBackgroundClip: "text",
-                    color: "transparent",
-                  }
-            }
-          >
-            Blockchain Learning Platform
-          </h1>
-          <div className="flex items-center gap-4">
-            {/* Dark Mode Toggle - Styled like the chatbot version */}
-            <button
-              onClick={() => setDarkMode(!darkMode)}
-              className="p-2 rounded-full transition-colors duration-200"
-              style={
-                darkMode
-                  ? {
-                      backgroundColor: darkColors.cardBgSecondary,
-                      color: darkColors.textAccent,
-                    }
-                  : {
-                      backgroundColor: "rgb(229, 231, 235)",
-                      color: "rgb(139, 92, 246)",
-                    }
-              }
-              aria-label={
-                darkMode ? "Switch to light mode" : "Switch to dark mode"
-              }
-            >
-              {darkMode ? <Sun size={20} /> : <Moon size={20} />}
-            </button>
-
-            {/* Navigation */}
-            <nav className="flex gap-6">
-              <Link
-                href="/"
-                className="transition-colors"
-                style={
-                  darkMode
-                    ? { color: darkColors.textSecondary }
-                    : { color: "rgb(75, 85, 99)" }
-                }
-              >
-                Home
-              </Link>
-              <Link
-                href="/courses"
-                className="font-medium"
-                style={{ color: darkColors.accent }}
-              >
-                Courses
-              </Link>
-              <Link
-                href="/practice"
-                className="transition-colors"
-                style={
-                  darkMode
-                    ? { color: darkColors.textSecondary }
-                    : { color: "rgb(75, 85, 99)" }
-                }
-              >
-                Practice Arena
-              </Link>
-              <Link
-                href="/chatbot"
-                className="transition-colors"
-                style={
-                  darkMode
-                    ? { color: darkColors.textSecondary }
-                    : { color: "rgb(75, 85, 99)" }
-                }
-              >
-                AI Assistant
-              </Link>
-            </nav>
+      {/* Header area with title */}
+      <div className="relative z-10">
+        <Navbar />
+        <div className="max-w-6xl mx-auto px-6 py-12 ">
+          <div className="text-center mb-12 mt-12">
+            <div className="mb-3">
+              <span className="bg-violet-900/30 text-violet-400 text-xs font-medium px-3 py-1 rounded-full inline-block">
+                Web3 Curriculum
+              </span>
+            </div>
+            <h1 className="text-3xl md:text-4xl font-bold mb-4">
+              Blockchain <span className="text-violet-400">Learning Path</span>
+            </h1>
+            <p className="text-gray-300 max-w-2xl mx-auto">
+              Master blockchain development with our comprehensive courses. From
+              beginner fundamentals to advanced DeFi and security protocols.
+            </p>
           </div>
-        </header>
 
-        {/* Main Content */}
-        <div className="p-6">
-          <div className="flex justify-between items-center mb-8">
-            <h2
-              className="text-3xl font-bold"
-              style={
-                darkMode
-                  ? { color: darkColors.textSecondary }
-                  : {
-                      backgroundImage:
-                        "linear-gradient(to right, #C1A5E1, #A7C7E7)",
-                      WebkitBackgroundClip: "text",
-                      color: "transparent",
-                    }
-              }
-            >
-              Blockchain Courses
-            </h2>
-            <div className="relative">
-              <input
-                type="text"
-                placeholder="Search courses..."
-                className="px-4 py-2 rounded-lg focus:outline-none focus:ring-2 border"
-                style={
-                  darkMode
-                    ? ({
-                        backgroundColor: darkColors.cardBgSecondary,
-                        borderColor: darkColors.borderColor,
-                        color: darkColors.textPrimary,
-                        "--placeholder-color": darkColors.textMuted,
-                        "--focus-ring-color": darkColors.accentBorder,
-                      } as React.CSSProperties)
-                    : ({
-                        backgroundColor: "white",
-                        borderColor: "rgb(209, 213, 219)",
-                        "--focus-ring-color": "rgb(139, 92, 246)",
-                      } as React.CSSProperties)
-                }
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-              <svg
-                className="w-5 h-5 absolute right-3 top-2.5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
-                style={
-                  darkMode
-                    ? { color: darkColors.textMuted }
-                    : { color: "rgb(156, 163, 175)" }
-                }
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                />
-              </svg>
+          {/* Stats section - simplified to a single row */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
+            <div className="bg-gray-900/60 rounded-lg border border-violet-900/50 p-4 flex items-center">
+              <Book className="w-5 h-5 text-violet-400 mr-3" />
+              <div>
+                <p className="text-gray-400 text-sm">Total Courses</p>
+                <h3 className="text-xl font-bold text-white">
+                  {courses.length}
+                </h3>
+              </div>
+            </div>
+            <div className="bg-gray-900/60 rounded-lg border border-violet-900/50 p-4 flex items-center">
+              <Code className="w-5 h-5 text-violet-400 mr-3" />
+              <div>
+                <p className="text-gray-400 text-sm">Learning Hours</p>
+                <h3 className="text-xl font-bold text-white">
+                  {courses.reduce(
+                    (sum, course) => sum + course.lessonCount * 2,
+                    0
+                  )}
+                  +
+                </h3>
+              </div>
+            </div>
+            <div className="bg-gray-900/60 rounded-lg border border-violet-900/50 p-4 flex items-center">
+              <Users className="w-5 h-5 text-violet-400 mr-3" />
+              <div>
+                <p className="text-gray-400 text-sm">Active Students</p>
+                <h3 className="text-xl font-bold text-white">
+                  {courses
+                    .reduce((sum, course) => sum + course.popularity, 0)
+                    .toLocaleString()}
+                  +
+                </h3>
+              </div>
             </div>
           </div>
 
-          {/* Courses Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredCourses.map((course) => (
-              <div
-                key={course.id}
-                className="rounded-xl overflow-hidden shadow-lg border transition-all transform hover:-translate-y-1 cursor-pointer"
-                style={
-                  darkMode
-                    ? {
-                        backgroundColor: `${darkColors.cardBg}CC`,
-                        borderColor: darkColors.borderColor,
-                        boxShadow: `0 4px 6px -1px ${darkColors.background}`,
-                      }
-                    : {
-                        backgroundColor: "rgba(255, 255, 255, 0.8)",
-                        borderColor: "rgb(229, 231, 235)",
-                      }
-                }
-                onClick={() => router.push(`/courses/${course.id}`)}
-              >
-                <div
-                  className="h-48 relative bg-cover bg-center"
-                  style={{
-                    backgroundImage: course.image
-                      ? `url(${course.image})`
-                      : darkMode
-                      ? `linear-gradient(to bottom right, ${darkColors.primary}30, ${darkColors.cardBg})`
-                      : "linear-gradient(to bottom right, rgba(139, 92, 246, 0.3), rgba(255, 255, 255, 0.8))",
-                  }}
+          {/* Filter and search bar - simplified layout */}
+          <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
+            <div className="w-full md:w-auto flex flex-col md:flex-row gap-4 items-center">
+              <div className="w-full md:w-auto bg-gray-900/60 p-1 rounded-lg border border-violet-900/30 flex items-center">
+                <button
+                  onClick={() => setFilter("all")}
+                  className={`px-3 py-1.5 text-sm rounded-md ${
+                    filter === "all"
+                      ? "bg-violet-700 text-white"
+                      : "hover:bg-gray-800 text-gray-300"
+                  }`}
                 >
-                  {!course.image && (
-                    <div
-                      className="absolute inset-0 flex items-center justify-center text-5xl font-bold"
-                      style={{ color: darkColors.accent }}
-                    >
-                      {course.title.charAt(0)}
-                    </div>
-                  )}
-                  <div
-                    className="absolute bottom-0 left-0 right-0 h-1/3"
-                    style={{
-                      background: darkMode
-                        ? `linear-gradient(to top, ${darkColors.cardBg}, transparent)`
-                        : "linear-gradient(to top, rgba(255, 255, 255, 0.8), transparent)",
-                    }}
-                  ></div>
-                </div>
+                  All
+                </button>
+                <button
+                  onClick={() => setFilter("Beginner")}
+                  className={`px-3 py-1.5 text-sm rounded-md ${
+                    filter === "Beginner"
+                      ? "bg-violet-700 text-white"
+                      : "hover:bg-gray-800 text-gray-300"
+                  }`}
+                >
+                  Beginner
+                </button>
+                <button
+                  onClick={() => setFilter("Intermediate")}
+                  className={`px-3 py-1.5 text-sm rounded-md ${
+                    filter === "Intermediate"
+                      ? "bg-violet-700 text-white"
+                      : "hover:bg-gray-800 text-gray-300"
+                  }`}
+                >
+                  Intermediate
+                </button>
+                <button
+                  onClick={() => setFilter("Advanced")}
+                  className={`px-3 py-1.5 text-sm rounded-md ${
+                    filter === "Advanced"
+                      ? "bg-violet-700 text-white"
+                      : "hover:bg-gray-800 text-gray-300"
+                  }`}
+                >
+                  Advanced
+                </button>
+              </div>
 
-                <div className="p-6">
-                  <div className="flex justify-between items-start mb-2">
-                    <h3
-                      className="text-xl font-bold"
-                      style={
-                        darkMode
-                          ? { color: darkColors.textPrimary }
-                          : { color: "rgb(31, 41, 55)" }
-                      }
-                    >
-                      {course.title}
-                    </h3>
-                    <span
-                      className="px-2 py-1 text-xs rounded-full"
-                      style={{
-                        backgroundColor:
-                          course.level === "Beginner"
-                            ? "rgba(16, 185, 129, 0.2)"
-                            : course.level === "Intermediate"
-                            ? "rgba(59, 130, 246, 0.2)"
-                            : "rgba(139, 92, 246, 0.2)",
-                        color:
-                          course.level === "Beginner"
-                            ? "#10B981"
-                            : course.level === "Intermediate"
-                            ? "#3B82F6"
-                            : "#8B5CF6",
-                      }}
-                    >
-                      {course.level}
-                    </span>
-                  </div>
-                  <p
-                    className="mb-4"
-                    style={
-                      darkMode
-                        ? { color: darkColors.textSecondary }
-                        : { color: "rgb(107, 114, 128)" }
-                    }
-                  >
-                    {course.description}
+              <div className="w-full md:w-64 relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Search className="h-4 w-4 text-gray-400" />
+                </div>
+                <input
+                  type="text"
+                  className="block w-full bg-gray-900/60 border border-violet-900/30 rounded-lg py-2 pl-10 pr-3 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-violet-600 focus:border-transparent"
+                  placeholder="Search courses..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
+            </div>
+
+            <Link
+              href="/create-course"
+              className="w-full md:w-auto px-4 py-2 bg-violet-700 hover:bg-violet-600 text-white font-medium rounded-lg transition-colors flex items-center justify-center"
+            >
+              Request New Course
+              <ChevronRight className="w-4 h-4 ml-1" />
+            </Link>
+          </div>
+
+          {/* Popular tags - simplified */}
+          <div className="flex flex-wrap gap-2 mb-6">
+            <div className="text-sm text-gray-400 mr-2">Popular:</div>
+            {Array.from(new Set(courses.flatMap((course) => course.tags)))
+              .slice(0, 8)
+              .map((tag) => (
+                <button
+                  key={tag}
+                  onClick={() => setSearchTerm(tag)}
+                  className="px-3 py-1 text-xs rounded-full bg-gray-800 text-gray-300 hover:bg-violet-900/30 hover:text-violet-300 transition-colors"
+                >
+                  {tag}
+                </button>
+              ))}
+          </div>
+
+          {/* Course grid - simplified cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredCourses.length === 0 ? (
+              <div className="col-span-3 text-center py-12">
+                <div className="bg-gray-900/60 rounded-lg border border-violet-900/50 p-8">
+                  <Search className="h-10 w-10 text-gray-500 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-gray-300 mb-2">
+                    No courses found
+                  </h3>
+                  <p className="text-gray-400">
+                    Try adjusting your search or filter.
                   </p>
-                  <div
-                    className="flex justify-between text-sm pt-2 border-t"
-                    style={
-                      darkMode
-                        ? {
-                            borderColor: `${darkColors.borderColor}50`,
-                            color: darkColors.textMuted,
-                          }
-                        : {
-                            borderColor: "rgba(229, 231, 235, 0.5)",
-                            color: "rgb(156, 163, 175)",
-                          }
-                    }
-                  >
-                    <div className="flex items-center">
-                      <svg
-                        className="w-4 h-4 mr-1"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                        xmlns="http://www.w3.org/2000/svg"
-                        style={{ color: darkColors.accent }}
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                        />
-                      </svg>
-                      {course.duration}
-                    </div>
-                    <div className="flex items-center">
-                      <svg
-                        className="w-4 h-4 mr-1"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                        xmlns="http://www.w3.org/2000/svg"
-                        style={{ color: darkColors.accent }}
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M16 4v12l-4-2-4 2V4M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                        />
-                      </svg>
-                      {course.lessonCount} lessons
-                    </div>
-                  </div>
                 </div>
               </div>
-            ))}
-          </div>
+            ) : (
+              filteredCourses.map((course) => (
+                <div
+                  key={course.id}
+                  className="bg-gray-900/60 border border-violet-900/30 rounded-lg overflow-hidden hover:border-violet-700 transition-all group"
+                >
+                  <div className="p-5">
+                    <div className="flex justify-between items-start mb-3">
+                      <span
+                        className={`text-xs font-medium px-2 py-0.5 rounded-full ${getDifficultyColor(
+                          course.level
+                        )}`}
+                      >
+                        {course.level}
+                      </span>
+                      <div className="flex items-center text-gray-400 text-sm">
+                        <Users className="w-3 h-3 mr-1" />
+                        {course.popularity.toLocaleString()}
+                      </div>
+                    </div>
 
-          {filteredCourses.length === 0 && (
-            <div
-              className="text-center py-16 rounded-xl mt-8 backdrop-blur-sm"
-              style={
-                darkMode
-                  ? {
-                      backgroundColor: `${darkColors.cardBg}30`,
-                      color: darkColors.textSecondary,
-                    }
-                  : {
-                      backgroundColor: "rgba(243, 244, 246, 0.3)",
-                      color: "rgb(75, 85, 99)",
-                    }
-              }
-            >
-              <h3 className="text-2xl font-medium">
-                No courses found matching your search
-              </h3>
-              <button
-                className="mt-4 px-4 py-2 rounded-lg transition-colors"
-                style={
-                  darkMode
-                    ? {
-                        backgroundColor: darkColors.primary,
-                        color: darkColors.textPrimary,
-                      }
-                    : { backgroundColor: "rgb(139, 92, 246)", color: "white" }
-                }
-                onClick={() => setSearchTerm("")}
-              >
-                Clear Search
-              </button>
-            </div>
-          )}
+                    <h3 className="text-lg font-semibold mb-2 text-white group-hover:text-violet-400 transition-colors">
+                      {course.title}
+                    </h3>
+                    <p className="text-gray-400 text-sm mb-4 line-clamp-2">
+                      {course.description}
+                    </p>
+
+                    <div className="flex flex-wrap gap-1 mb-3">
+                      {course.tags.slice(0, 3).map((tag) => (
+                        <span
+                          key={tag}
+                          className="px-2 py-0.5 text-xs bg-gray-800 text-gray-300 rounded"
+                        >
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+
+                    <div className="flex justify-between items-center text-sm text-gray-400">
+                      <div className="flex items-center">
+                        <Clock className="w-4 h-4 mr-1" />
+                        {course.duration}
+                      </div>
+                      <div className="flex items-center">
+                        <Book className="w-4 h-4 mr-1" />
+                        {course.lessonCount} lessons
+                      </div>
+                    </div>
+                  </div>
+
+                  <Link
+                    href={`/courses/${course.id}`}
+                    className="block bg-gray-800 hover:bg-violet-700 px-5 py-3 text-center text-sm font-medium text-white transition-colors"
+                  >
+                    Explore Course
+                  </Link>
+                </div>
+              ))
+            )}
+          </div>
         </div>
       </div>
-    </main>
+
+      {/* Theme toggle button */}
+      <button
+        onClick={() => setDarkMode(!darkMode)}
+        className="fixed right-5 bottom-5 p-3 bg-gray-800 text-white rounded-full shadow-lg"
+      >
+        {darkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+      </button>
+    </div>
   );
 }
