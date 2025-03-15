@@ -318,7 +318,7 @@ const Footer = () => {
                       placeholder="Your name"
                       value={formData.name}
                       onChange={handleChange}
-                      className="w-full px-3 py-2 rounded-lg bg-gray-900 border border-gray-700 text-gray-300 focus:outline-none focus:ring-2 focus:ring-violet-400 focus:border-transparent text-sm"
+                      className="w-full px-3 py-2 rounded-lg bg-gray-900 border border-gray-700 text-gray-300 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-violet-400 focus:border-transparent text-sm"
                       required
                       disabled={status.isSubmitting}
                     />
@@ -346,7 +346,7 @@ const Footer = () => {
                     value={formData.message}
                     onChange={handleChange}
                     rows={3}
-                    className="w-full px-3 py-2 rounded-lg bg-gray-900 border border-gray-700 text-gray-300 focus:outline-none focus:ring-2 focus:ring-violet-400 focus:border-transparent text-sm"
+                    className="w-full px-3 py-2 rounded-lg bg-gray-900 border border-gray-700 text-gray-300 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-violet-400 focus:border-transparent text-sm"
                     required
                     disabled={status.isSubmitting}
                   />
