@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Head from "next/head";
 import Link from "next/link";
@@ -74,6 +74,7 @@ export default function CourseDetailPage({
   const router = useRouter();
   const searchParams = useSearchParams();
   const lessonId = searchParams.get("lessonId");
+  const mainContentRef = useRef<HTMLDivElement>(null);
 
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [course, setCourse] = useState<CourseWithLessons | null>(null);
@@ -115,12 +116,28 @@ export default function CourseDetailPage({
       setLessonCompleted(JSON.parse(savedProgress));
     }
   }, [id, lessonId]);
+  useEffect(() => {
+    if (currentLesson) {
+      // Reset code editor state by modifying the LessonChallenge component
+      // This depends on how your LessonChallenge component handles the code state
+      const editorElement = document.querySelector("[data-lesson-editor]");
+      if (editorElement) {
+        // Reset any editor-related DOM state
+        editorElement.innerHTML = "";
+      }
+    }
+  }, [currentLesson?.id]);
 
   // Handle lesson change
   const handleLessonChange = (lesson: Lesson) => {
     setCurrentLesson(lesson);
-    // Update URL - note the change in how navigation works
+    // Update URL
     router.push(`/courses/${id}?lessonId=${lesson.id}`);
+
+    // Scroll main content to top
+    if (mainContentRef.current) {
+      mainContentRef.current.scrollTop = 0;
+    }
   };
 
   // Handle challenge completion
@@ -289,7 +306,10 @@ export default function CourseDetailPage({
         </aside>
 
         {/* Main Content */}
-        <main className="flex-1 overflow-y-auto relative z-10 h-[calc(100vh-4rem)]">
+        <main
+          ref={mainContentRef}
+          className="flex-1 overflow-y-auto relative z-10 h-[calc(100vh-4rem)]"
+        >
           {/* Backdrop overlay when sidebar is open on mobile */}
           {sidebarOpen && (
             <div
@@ -511,10 +531,11 @@ export default function CourseDetailPage({
             {/* Challenge component (only show if lesson has a problem statement) */}
             {currentLesson.problemStatement && (
               <LessonChallenge
+                key={currentLesson.id} // Add this key prop
                 lessonId={currentLesson.id}
                 darkMode={darkMode}
                 onChallengeComplete={handleChallengeComplete}
-                initialCode={getInitialCodeTemplate(currentLesson.id)} // Function to get template
+                initialCode={getInitialCodeTemplate(currentLesson.id)}
                 problemStatement={currentLesson.problemStatement}
               />
             )}
