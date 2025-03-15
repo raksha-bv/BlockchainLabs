@@ -12,6 +12,7 @@ import {
   Book,
   Clock,
   Users,
+  LightbulbIcon,
 } from "lucide-react";
 import type { Course } from "../page";
 import ReactMarkdown from "react-markdown";
@@ -19,13 +20,29 @@ import rehypeRaw from "rehype-raw";
 import rehypeHighlight from "rehype-highlight";
 import remarkGfm from "remark-gfm";
 import { solidityCourse } from "@/utils/solidityCourse";
+import LessonChallenge from "@/components/LessonChallenge";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import {
+  problemStatements,
+  getInitialCodeTemplate,
+} from "@/utils/problemStatements";
 
-// Define lesson type
+// Define problem statement type
+interface ProblemStatement {
+  title: string;
+  description: string;
+  requirements: string[];
+  hints: string[];
+}
+
+// Define lesson type with problem statement
 interface Lesson {
   id: string;
   title: string;
   content: string;
+  problemStatement?: ProblemStatement; // Optional problem statement
 }
+
 type ThemeMode = "dark" | "light";
 
 // Define full course type with lessons
@@ -33,10 +50,14 @@ interface CourseWithLessons extends Course {
   lessons: Lesson[];
 }
 
-// Course data object - in a real application, this would come from an API
 const coursesData: { [key: string]: CourseWithLessons } = {
-  "basics-of-solidity": solidityCourse,
-  // Other courses would be added here with their lessons
+  "basics-of-solidity": {
+    ...solidityCourse,
+    lessons: solidityCourse.lessons.map((lesson) => ({
+      ...lesson,
+      problemStatement: problemStatements[lesson.id],
+    })),
+  },
 };
 
 export default function CourseDetailPage({
@@ -58,6 +79,10 @@ export default function CourseDetailPage({
   const [course, setCourse] = useState<CourseWithLessons | null>(null);
   const [currentLesson, setCurrentLesson] = useState<Lesson | null>(null);
   const [darkMode, setDarkMode] = useState(true);
+  const [lessonCompleted, setLessonCompleted] = useState<{
+    [key: string]: boolean;
+  }>({});
+  const [showProblemStatement, setShowProblemStatement] = useState(true);
 
   // Get current lesson index
   const currentLessonIndex =
@@ -83,6 +108,12 @@ export default function CourseDetailPage({
         }
       }
     }
+
+    // Load completed lessons from localStorage
+    const savedProgress = localStorage.getItem(`course_progress_${id}`);
+    if (savedProgress) {
+      setLessonCompleted(JSON.parse(savedProgress));
+    }
   }, [id, lessonId]);
 
   // Handle lesson change
@@ -90,6 +121,33 @@ export default function CourseDetailPage({
     setCurrentLesson(lesson);
     // Update URL - note the change in how navigation works
     router.push(`/courses/${id}?lessonId=${lesson.id}`);
+  };
+
+  // Handle challenge completion
+  const handleChallengeComplete = () => {
+    if (currentLesson) {
+      const updatedCompletions = {
+        ...lessonCompleted,
+        [currentLesson.id]: true,
+      };
+
+      setLessonCompleted(updatedCompletions);
+
+      // Save progress to localStorage
+      localStorage.setItem(
+        `course_progress_${id}`,
+        JSON.stringify(updatedCompletions)
+      );
+    }
+  };
+
+  // Check if next lesson is available
+  const canProceedToNextLesson = () => {
+    if (!currentLesson) return false;
+    return (
+      !currentLesson.problemStatement ||
+      lessonCompleted[currentLesson.id] === true
+    );
   };
 
   // Get difficulty color based on level
@@ -195,20 +253,35 @@ export default function CourseDetailPage({
                   currentLesson.id === lesson.id
                     ? "bg-violet-900/30 text-white"
                     : "hover:bg-gray-800/60 text-gray-300"
+                } ${
+                  // Show lessons as locked if previous lesson not completed
+                  index > 0 && !lessonCompleted[course.lessons[index - 1].id]
+                    ? "opacity-50 pointer-events-none"
+                    : ""
                 }`}
                 onClick={() => handleLessonChange(lesson)}
+                disabled={
+                  index > 0 && !lessonCompleted[course.lessons[index - 1].id]
+                }
               >
                 <div className="flex items-center">
                   <span
                     className={`w-6 h-6 rounded-full flex items-center justify-center text-xs mr-3 ${
                       currentLesson.id === lesson.id
                         ? "bg-violet-700 text-white"
+                        : lessonCompleted[lesson.id]
+                        ? "bg-green-600 text-white"
                         : "bg-gray-800 text-gray-400"
                     }`}
                   >
-                    {index + 1}
+                    {lessonCompleted[lesson.id] ? "✓" : index + 1}
                   </span>
                   <span className="text-sm font-medium">{lesson.title}</span>
+                  {lesson.problemStatement && (
+                    <span className="ml-2 text-xs bg-violet-700/40 text-violet-300 px-1.5 py-0.5 rounded">
+                      Challenge
+                    </span>
+                  )}
                 </div>
               </button>
             ))}
@@ -225,7 +298,7 @@ export default function CourseDetailPage({
             ></div>
           )}
 
-          <div className="max-w-3xl mx-auto px-6 py-8">
+          <div className="max-w-3xl mx-auto px-6 py-8 pb-16">
             {/* Course progress */}
             <div className="mb-8">
               <div className="flex items-center justify-between mb-2">
@@ -262,7 +335,105 @@ export default function CourseDetailPage({
               <p className="text-gray-400">
                 Learn at your own pace and master the concepts
               </p>
+              {currentLesson.problemStatement && (
+                <div className="mt-3 flex items-center text-violet-400">
+                  <LightbulbIcon className="w-4 h-4 mr-1" />
+                  <span className="text-sm font-medium">
+                    Includes coding challenge
+                  </span>
+                </div>
+              )}
             </div>
+
+            {/* Problem Statement Card - Show before content */}
+            {currentLesson.problemStatement && showProblemStatement && (
+              <Card
+                className={`border mb-8 ${
+                  darkMode
+                    ? "border-violet-900/30 bg-gray-900/60"
+                    : "border-violet-200 bg-violet-50"
+                }`}
+              >
+                <CardHeader className="pb-2 flex flex-row items-center justify-between">
+                  <CardTitle
+                    className={`text-lg flex items-center ${
+                      darkMode ? "text-white" : "text-violet-900"
+                    }`}
+                  >
+                    <LightbulbIcon className="w-5 h-5 mr-2 text-violet-400" />
+                    {currentLesson.problemStatement.title}
+                  </CardTitle>
+                  <button
+                    onClick={() =>
+                      setShowProblemStatement(!showProblemStatement)
+                    }
+                    className={`text-sm font-medium ${
+                      darkMode
+                        ? "text-violet-400 hover:text-violet-300"
+                        : "text-violet-600 hover:text-violet-700"
+                    }`}
+                  >
+                    Hide Challenge
+                  </button>
+                </CardHeader>
+                <CardContent>
+                  <p
+                    className={`mb-4 ${
+                      darkMode ? "text-gray-300" : "text-gray-700"
+                    }`}
+                  >
+                    {currentLesson.problemStatement.description}
+                  </p>
+
+                  <div className="mb-4">
+                    <h4
+                      className={`font-semibold mb-2 ${
+                        darkMode ? "text-violet-400" : "text-violet-700"
+                      }`}
+                    >
+                      Requirements:
+                    </h4>
+                    <ul
+                      className={`list-disc pl-5 space-y-1 ${
+                        darkMode ? "text-gray-300" : "text-gray-700"
+                      }`}
+                    >
+                      {currentLesson.problemStatement.requirements.map(
+                        (req, index) => (
+                          <li key={index}>{req}</li>
+                        )
+                      )}
+                    </ul>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Collapsed Problem Statement (when hidden) */}
+            {currentLesson.problemStatement && !showProblemStatement && (
+              <button
+                onClick={() => setShowProblemStatement(true)}
+                className={`w-full mb-8 p-4 flex items-center justify-between rounded-lg border ${
+                  darkMode
+                    ? "border-violet-900/30 bg-gray-900/40 hover:bg-gray-900/60"
+                    : "border-violet-200 bg-violet-50/70 hover:bg-violet-50"
+                }`}
+              >
+                <div className="flex items-center">
+                  <LightbulbIcon className="w-5 h-5 mr-2 text-violet-400" />
+                  <span className={darkMode ? "text-white" : "text-violet-900"}>
+                    {currentLesson.problemStatement.title}
+                  </span>
+                </div>
+                <span
+                  className={`text-sm ${
+                    darkMode ? "text-violet-400" : "text-violet-600"
+                  }`}
+                >
+                  Show Challenge
+                </span>
+              </button>
+            )}
 
             {/* Markdown content */}
             <article className="prose prose-invert prose-violet max-w-none bg-gray-900/60 border border-violet-900/30 rounded-lg p-6">
@@ -337,6 +508,17 @@ export default function CourseDetailPage({
               </div>
             </article>
 
+            {/* Challenge component (only show if lesson has a problem statement) */}
+            {currentLesson.problemStatement && (
+              <LessonChallenge
+                lessonId={currentLesson.id}
+                darkMode={darkMode}
+                onChallengeComplete={handleChallengeComplete}
+                initialCode={getInitialCodeTemplate(currentLesson.id)} // Function to get template
+                problemStatement={currentLesson.problemStatement}
+              />
+            )}
+
             {/* Navigation buttons */}
             <div className="mt-8 flex justify-between">
               {currentLessonIndex > 0 ? (
@@ -355,10 +537,19 @@ export default function CourseDetailPage({
 
               {currentLessonIndex < course.lessons.length - 1 && (
                 <button
-                  className="px-4 py-2 rounded-lg transition-colors bg-violet-700 hover:bg-violet-600 text-white flex items-center ml-auto"
-                  onClick={() =>
-                    handleLessonChange(course.lessons[currentLessonIndex + 1])
-                  }
+                  className={`px-4 py-2 rounded-lg transition-colors flex items-center ml-auto ${
+                    canProceedToNextLesson()
+                      ? "bg-violet-700 hover:bg-violet-600 text-white"
+                      : "bg-gray-700 text-gray-400 cursor-not-allowed"
+                  }`}
+                  onClick={() => {
+                    if (canProceedToNextLesson()) {
+                      handleLessonChange(
+                        course.lessons[currentLessonIndex + 1]
+                      );
+                    }
+                  }}
+                  disabled={!canProceedToNextLesson()}
                 >
                   Next Lesson
                   <ChevronLeft className="w-5 h-5 ml-2 rotate-180" />
