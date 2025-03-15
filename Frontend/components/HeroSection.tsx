@@ -24,7 +24,7 @@ const HeroSection = () => {
         ></div>
 
         {/* Animated floating particles */}
-        <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute inset-0 overflow-hidden -z-20">
           {[...Array(30)].map((_, i) => (
             <motion.div
               key={i}
