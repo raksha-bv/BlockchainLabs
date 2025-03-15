@@ -268,7 +268,7 @@ const Footer = () => {
                   <input
                     type="email"
                     placeholder="Your email address"
-                    className="px-3 z-20 py-2 rounded-lg md:rounded-r-none bg-gray-900 border border-gray-700 text-gray-300 focus:outline-none focus:ring-2 focus:ring-violet-400 focus:border-transparent w-full sm:w-auto mb-2 sm:mb-0 text-sm"
+                    className="px-3 z-20 py-2 rounded-lg md:rounded-r-none bg-gray-900 border border-gray-700 text-gray-300 focus:outline-none focus:border-transparent w-full sm:w-auto mb-2 sm:mb-0 text-sm"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
