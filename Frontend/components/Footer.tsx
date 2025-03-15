@@ -1,9 +1,60 @@
 "use client";
-import React from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 
 const Footer = () => {
+  const [email, setEmail] = useState("");
+  const [status, setStatus] = useState({
+    message: "",
+    type: "", // "success" or "error"
+    isSubmitting: false
+  });
+
+  const handleSubscribe = async (e : any) => {
+    e.preventDefault();
+    
+    // Reset status
+    setStatus({
+      message: "",
+      type: "",
+      isSubmitting: true
+    });
+
+    try {
+      const response = await fetch('/api/newsletter', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setStatus({
+          message: data.message,
+          type: "success",
+          isSubmitting: false
+        });
+        setEmail(""); // Clear input on success
+      } else {
+        setStatus({
+          message: data.message || "Subscription failed. Please try again.",
+          type: "error",
+          isSubmitting: false
+        });
+      }
+    } catch (error) {
+      setStatus({
+        message: "Connection error. Please try again later.",
+        type: "error",
+        isSubmitting: false
+      });
+    }
+  };
+
   return (
     <footer className="bg-gray-950 border-t border-violet-900/30">
       <div className="max-w-6xl mx-auto px-6 py-5">
@@ -212,48 +263,65 @@ const Footer = () => {
               </p>
             </div>
             <div className="md:w-1/2">
-              <div className="flex flex-col justify-end sm:flex-row">
-                <input
-                  type="email"
-                  placeholder="Your email address"
-                  className="px-3 py-2 rounded-lg md:rounded-r-none bg-gray-900 border border-gray-700 text-gray-300 focus:outline-none focus:ring-2 focus:ring-violet-400 focus:border-transparent w-full sm:w-auto mb-2 sm:mb-0 text-sm"
-                />
-                <button className="px-4 py-2 bg-violet-700 hover:bg-violet-600 rounded-lg md:rounded-l-none text-white font-medium transition-colors text-sm">
-                  Subscribe
-                </button>
-              </div>
+              <form onSubmit={handleSubscribe} className="w-full">
+                <div className="flex flex-col justify-end sm:flex-row">
+                  <input
+                    type="email"
+                    placeholder="Your email address"
+                    className="px-3 z-20 py-2 rounded-lg md:rounded-r-none bg-gray-900 border border-gray-700 text-gray-300 focus:outline-none focus:ring-2 focus:ring-violet-400 focus:border-transparent w-full sm:w-auto mb-2 sm:mb-0 text-sm"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    disabled={status.isSubmitting}
+                  />
+                  <button 
+                    type="submit"
+                    className={`px-4 z-20 py-2 bg-violet-700 hover:bg-violet-600 rounded-lg md:rounded-l-none text-white font-medium transition-colors text-sm flex items-center justify-center ${status.isSubmitting ? 'opacity-70 cursor-not-allowed' : ''}`}
+                    disabled={status.isSubmitting}
+                  >
+                    {status.isSubmitting ? (
+                      <>
+                        <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Processing...
+                      </>
+                    ) : (
+                      'Subscribe'
+                    )}
+                  </button>
+                </div>
+                {status.message && (
+                  <p className={`mt-2 text-sm ${status.type === "success" ? "text-green-400" : "text-red-400"}`}>
+                    {status.message}
+                  </p>
+                )}
+              </form>
             </div>
           </div>
         </motion.div>
 
         {/* Copyright */}
         <motion.div
-          className="mt-6 text-center"
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
+          className="mt-8 pt-4 border-t border-gray-800 text-center text-gray-500 text-xs"
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.4 }}
         >
-          <p className="text-gray-500 text-xs">
-            © {new Date().getFullYear()} Blockchain Lab. All rights reserved.
-          </p>
-          <div className="mt-1 flex justify-center space-x-4">
+          <p>© {new Date().getFullYear()} Blockchain Lab. All rights reserved.</p>
+          <div className="mt-2 flex justify-center space-x-4">
             <Link
               href="/privacy"
-              className="text-gray-500 hover:text-violet-400 text-xs"
+              className="hover:text-violet-400 transition-colors"
             >
               Privacy Policy
             </Link>
             <Link
               href="/terms"
-              className="text-gray-500 hover:text-violet-400 text-xs"
+              className="hover:text-violet-400 transition-colors"
             >
               Terms of Service
-            </Link>
-            <Link
-              href="/contact"
-              className="text-gray-500 hover:text-violet-400 text-xs"
-            >
-              Contact Us
             </Link>
           </div>
         </motion.div>

@@ -208,29 +208,7 @@ const CTASection = () => {
           </div>
         </div>
       </div>
-       <div className="absolute inset-0 overflow-hidden">
-                {[...Array(50)].map((_, i) => (
-                  <motion.div
-                    key={i}
-                    className="absolute w-1 h-1 rounded-full bg-violet-400/30"
-                    style={{
-                      top: `${Math.random() * 100}%`,
-                      left: `${Math.random() * 100}%`,
-                    }}
-                    animate={{
-                      y: [0, Math.random() * 100 - 50],
-                      x: [0, Math.random() * 100 - 50],
-                      opacity: [0.2, 0.8, 0.2],
-                    }}
-                    transition={{
-                      duration: 5 + Math.random() * 10,
-                      repeat: Infinity,
-                      repeatType: "reverse",
-                      ease: "easeInOut",
-                    }}
-                  />
-                ))}
-              </div>
+       
     </section>
   );
 };

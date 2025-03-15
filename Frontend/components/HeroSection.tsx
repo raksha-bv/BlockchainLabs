@@ -24,7 +24,7 @@ const HeroSection = () => {
         ></div>
 
         {/* Animated floating particles */}
-        <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute inset-0 overflow-hidden -z-20">
           {[...Array(30)].map((_, i) => (
             <motion.div
               key={i}
@@ -153,7 +153,7 @@ const HeroSection = () => {
               transition={{ delay: 0.8, duration: 0.5 }}
             >
               <Link
-                href="/editor"
+                href="/code"
                 className="px-5 py-2.5 bg-violet-700 hover:bg-violet-600 text-white font-medium rounded-lg transition-colors flex items-center justify-center group"
               >
                 Start Coding
@@ -173,7 +173,7 @@ const HeroSection = () => {
                 </svg>
               </Link>
               <Link
-                href="/learn"
+                href="/courses"
                 className="px-5 py-2.5 bg-transparent border border-violet-700 hover:bg-violet-900/30 text-violet-400 font-medium rounded-lg transition-all flex items-center justify-center"
               >
                 Explore Courses
