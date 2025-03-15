@@ -33,3 +33,16 @@ footer {
   position: relative;
   z-index: 10;
 }
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+textarea:-webkit-autofill,
+textarea:-webkit-autofill:hover,
+textarea:-webkit-autofill:focus {
+  background-color: #111827 !important; /* Same as bg-gray-900 */
+  color: #d1d5db !important; /* Same as text-gray-300 */
+  -webkit-text-fill-color: #d1d5db !important; /* Forces text color */
+  caret-color: #d1d5db !important; /* Ensures cursor color matches text */
+  -webkit-box-shadow: 0 0 0px 1000px #111827 inset !important;
+  transition: background-color 5000s ease-in-out 0s;
+}

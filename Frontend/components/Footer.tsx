@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 
@@ -28,6 +28,20 @@ const Footer = () => {
       [name]: value,
     }));
   };
+
+  useEffect(() => {
+    if (status.message) {
+      const timer = setTimeout(() => {
+        setStatus((prevStatus) => ({
+          ...prevStatus,
+          message: "",
+        }));
+      }, 5000); // 5 seconds
+
+      // Clean up timer
+      return () => clearTimeout(timer);
+    }
+  }, [status.message]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
