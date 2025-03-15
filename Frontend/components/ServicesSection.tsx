@@ -112,7 +112,7 @@ const ServicesSection = () => {
             title="Interactive Code Editor"
             description="Write, compile, and test Solidity code directly in your browser with real-time feedback and syntax highlighting."
             linkText="Start Coding"
-            linkHref="/editor"
+            linkHref="/code"
           />
 
           <ServiceCard

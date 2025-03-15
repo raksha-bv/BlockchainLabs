@@ -289,7 +289,7 @@ export default function CoursesPage() {
             </div>
 
             <Link
-              href="/create-course"
+              href="/request-course"
               className="w-full md:w-auto px-4 py-2 bg-violet-700 hover:bg-violet-600 text-white font-medium rounded-lg transition-colors flex items-center justify-center"
             >
               Request New Course
