@@ -2,23 +2,59 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { ChevronLeft, Send, Shield, Rocket, CheckCircle, Users, Zap } from "lucide-react";
+import {
+  ChevronLeft,
+  Send,
+  Shield,
+  Rocket,
+  CheckCircle,
+  Users,
+  Zap,
+} from "lucide-react";
 
 const EarlyAccessPage = () => {
   const [email, setEmail] = useState("");
   const [experience, setExperience] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
-
-  const handleSubmit = (e : any) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    
-    // Simulate API call
-    setTimeout(() => {
-      setSubmitted(true);
+
+    try {
+      // Get form data
+      const formData = {
+        email,
+        name: (document.getElementById("name") as HTMLInputElement).value,
+        experience,
+        interests: (document.getElementById("interests") as HTMLTextAreaElement)
+          .value,
+        newsletter: (document.getElementById("newsletter") as HTMLInputElement)
+          .checked,
+      };
+
+      // Send data to API
+      const response = await fetch("/api/waitlist", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        setSubmitted(true);
+      } else {
+        alert(`Error: ${result.error}`);
+      }
+    } catch (error) {
+      console.error("Error submitting form:", error);
+      alert("Failed to submit form. Please try again.");
+    } finally {
       setLoading(false);
-    }, 1500);
+    }
   };
 
   return (

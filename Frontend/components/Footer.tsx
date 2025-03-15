@@ -76,7 +76,7 @@ const Footer = () => {
   return (
     <footer className="bg-gray-950 border-t border-violet-900/30">
       <div className="max-w-6xl mx-auto px-6 py-5">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="flex justify-between items-start">
           {/* Logo and Description Section */}
           <motion.div
             className="col-span-1 md:col-span-2"
@@ -195,11 +195,17 @@ const Footer = () => {
                 </Link>
               </li>
               <li>
-                <Link
+                {/* <Link
                   href="/blog"
                   className="text-gray-400 hover:text-violet-400 transition-colors"
                 >
                   Blog
+                </Link> */}
+                <Link
+                  href="/courses"
+                  className="text-gray-400 hover:text-violet-400 transition-colors"
+                >
+                  Courses
                 </Link>
               </li>
               <li>
@@ -214,7 +220,7 @@ const Footer = () => {
           </motion.div>
 
           {/* Resources */}
-          <motion.div
+          {/* <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
@@ -262,7 +268,7 @@ const Footer = () => {
                 </Link>
               </li>
             </ul>
-          </motion.div>
+          </motion.div> */}
         </div>
 
         {/* Newsletter Subscription */}
