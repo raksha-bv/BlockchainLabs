@@ -1,10 +1,13 @@
 "use client";
 import Link from "next/link";
 import React, { useState } from "react";
+import SignIn from "./SignIn";
+import UserAvatar from "./UserAvatar";
+import {auth} from "@/auth"
 
-const Navbar = () => {
+const Navbar = async () => {
   const [isHovered, setIsHovered] = useState(false);
-
+  const session = await auth();
   return (
     <nav className="absolute top-0 left-0 z-10 flex justify-between items-center px-6 md:px-12 py-4 w-full">
       <div className="flex items-center">
@@ -50,13 +53,15 @@ const Navbar = () => {
         </Link>
       </div>
 
-      <div>
-        <Link
+      <div className="flex gap-5">
+        {session ? <UserAvatar /> : <SignIn />}
+
+        {/* <Link
           href="/get-started"
           className="px-5 py-2 bg-violet-700 hover:bg-violet-600 rounded-md text-white transition-all transform hover:scale-105 hover:shadow-lg hover:shadow-violet-500/30"
         >
           Get Started
-        </Link>
+        </Link> */}
       </div>
     </nav>
   );
