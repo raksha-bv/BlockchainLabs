@@ -2,18 +2,18 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { 
-  Moon, 
-  Sun, 
-  ChevronLeft, 
-  Book, 
-  Clock, 
-  Users, 
+import {
+  Moon,
+  Sun,
+  ChevronLeft,
+  Book,
+  Clock,
+  Users,
   Send,
   Tag,
   Layers,
   MessageSquare,
-  Info
+  Info,
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 
@@ -30,7 +30,9 @@ export default function CreateCoursePage() {
     name: "",
     email: "",
   });
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [errors, setErrors] = useState<Record<string, string>>({
+    form: "",
+  });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
 
@@ -120,8 +122,21 @@ export default function CreateCoursePage() {
 
     setIsSubmitting(true);
 
-    // Simulate API call
-    setTimeout(() => {
+    try {
+      const response = await fetch("/api/courses", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Something went wrong");
+      }
+
       setIsSubmitting(false);
       setSubmitSuccess(true);
 
@@ -141,7 +156,15 @@ export default function CreateCoursePage() {
       setTimeout(() => {
         router.push("/courses");
       }, 3000);
-    }, 1500);
+    } catch (error) {
+      setIsSubmitting(false);
+      setErrors({
+        ...errors,
+        form:
+          error instanceof Error ? error.message : "Failed to submit the form",
+      });
+      console.error("Error submitting course request:", error);
+    }
   };
 
   return (
@@ -423,6 +446,11 @@ export default function CreateCoursePage() {
                     </div>
                   </div>
                 </div>
+                {errors.form && (
+                  <div className="bg-red-900/30 border border-red-500/50 rounded-lg p-4 mb-4">
+                    <p className="text-red-400 text-sm">{errors.form}</p>
+                  </div>
+                )}
 
                 <div className="flex justify-end">
                   <button
