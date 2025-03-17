@@ -193,6 +193,7 @@ export default function PracticePage() {
       const data = await response.json();
       setValidationResult(data);
       setValidationStatus(data.status ? "valid" : "invalid");
+      const ai_score = data.score;
 
       // Only track submissions if user is authenticated
       if (status === "authenticated" && session?.user?.email) {
@@ -208,6 +209,17 @@ export default function PracticePage() {
           }),
         });
 
+        const ai_score_response = await fetch("/api/users/ai-score",{
+          method: "POST",
+          headers:{
+            "Content-Type" : "application/json",
+          },
+          body: JSON.stringify({
+            email : session.user.email,
+            score : ai_score,
+          }),
+        })
+        
         const submissionData: UserSubmissionResponse =
           await submissionResponse.json();
 

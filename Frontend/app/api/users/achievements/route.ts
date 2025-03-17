@@ -39,7 +39,7 @@ export async function GET(req: NextRequest) {
         id: "Submission Warrior",
         name: "Submission Warrior",
         description: "Submit 50 or more tasks",
-        criteria: "submissions >= 50",
+        criteria: "submissions >= 6",
         earned: user.data.Achievement.includes("Submission Warrior"),
         progress: Math.min(user.data.submissions / 50, 1),
       },
