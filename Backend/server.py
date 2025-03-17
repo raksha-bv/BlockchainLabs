@@ -161,7 +161,8 @@ def validate_code():
         "status": true/false,
         "error": "Detailed explanation of how and which requirements are not met, if all requirements are met, leave it empty, if no requirements are provided leave it empty",
         "syntax_correct": "true/false",
-        "compilable_code": "true/false"
+        "compilable_code": "true/false",
+        "score" : "rate their code out of 100 based on  the code they wrote/100"
     }}
     
     """
