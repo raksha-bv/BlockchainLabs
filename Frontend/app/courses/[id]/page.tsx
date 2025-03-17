@@ -13,6 +13,7 @@ import {
   Clock,
   Users,
   LightbulbIcon,
+  CheckIcon,
 } from "lucide-react";
 import type { Course } from "../page";
 import ReactMarkdown from "react-markdown";
@@ -26,6 +27,7 @@ import {
   problemStatements,
   getInitialCodeTemplate,
 } from "@/utils/problemStatements";
+import { useSession } from "next-auth/react";
 
 // Define problem statement type
 interface ProblemStatement {
@@ -34,6 +36,7 @@ interface ProblemStatement {
   requirements: string[];
   hints: string[];
 }
+
 
 // Define lesson type with problem statement
 interface Lesson {
@@ -75,6 +78,13 @@ export default function CourseDetailPage({
   const searchParams = useSearchParams();
   const lessonId = searchParams.get("lessonId");
   const mainContentRef = useRef<HTMLDivElement>(null);
+  // Add this with your other state declarations
+  const [notification, setNotification] = useState({
+    show: false,
+    message: "",
+    type: "",
+  });
+  const {data: session,status} = useSession();
 
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [course, setCourse] = useState<CourseWithLessons | null>(null);
@@ -155,6 +165,70 @@ export default function CourseDetailPage({
         `course_progress_${id}`,
         JSON.stringify(updatedCompletions)
       );
+    }
+  };
+
+  // Add this function before the return statement
+  const recordCourseCompletion = async () => {
+    try {
+      // Get user email from session or auth provider
+      // Replace this with your actual authentication method
+      const email = session?.user?.email
+
+      if (!email) {
+        console.error("User email not found");
+        return;
+      }
+
+      const response = await fetch("/api/users/course", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        let message = "Course completed successfully!";
+
+        // Add level up info if applicable
+        if (data.levelUpdated) {
+          message += ` You've reached level ${data.newLevel}!`;
+        }
+
+        // Add achievements info if applicable
+        if (data.newAchievements && data.newAchievements.length > 0) {
+          message += ` Achievement${
+            data.newAchievements.length > 1 ? "s" : ""
+          } unlocked: ${data.newAchievements.map((a : any) => a.name).join(", ")}`;
+        }
+
+        // Show notification
+        setNotification({
+          show: true,
+          message,
+          type: "success",
+        });
+
+        // Hide notification after 5 seconds
+        setTimeout(() => {
+          setNotification({ show: false, message: "", type: "" });
+        }, 5000);
+      }
+    } catch (error) {
+      console.error("Failed to record course completion:", error);
+      setNotification({
+        show: true,
+        message: "Failed to record course completion. Please try again.",
+        type: "error",
+      });
+
+      // Hide notification after 5 seconds
+      setTimeout(() => {
+        setNotification({ show: false, message: "", type: "" });
+      }, 5000);
     }
   };
 
@@ -556,7 +630,7 @@ export default function CourseDetailPage({
                 <div></div> // Empty div to maintain the space for flexbox
               )}
 
-              {currentLessonIndex < course.lessons.length - 1 && (
+              {currentLessonIndex < course.lessons.length - 1 ? (
                 <button
                   className={`px-4 py-2 rounded-lg transition-colors flex items-center ml-auto ${
                     canProceedToNextLesson()
@@ -574,6 +648,23 @@ export default function CourseDetailPage({
                 >
                   Next Lesson
                   <ChevronLeft className="w-5 h-5 ml-2 rotate-180" />
+                </button>
+              ) : (
+                <button
+                  className={`px-4 py-2 rounded-lg transition-colors flex items-center ml-auto ${
+                    canProceedToNextLesson()
+                      ? "bg-green-600 hover:bg-green-500 text-white"
+                      : "bg-gray-700 text-gray-400 cursor-not-allowed"
+                  }`}
+                  onClick={() => {
+                    if (canProceedToNextLesson()) {
+                      recordCourseCompletion();
+                    }
+                  }}
+                  disabled={!canProceedToNextLesson()}
+                >
+                  Complete Course
+                  <CheckIcon className="w-5 h-5 ml-2" />
                 </button>
               )}
             </div>
