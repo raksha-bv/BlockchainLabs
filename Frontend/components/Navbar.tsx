@@ -3,11 +3,14 @@ import Link from "next/link";
 import React, { useState } from "react";
 import SignIn from "./SignIn";
 import UserAvatar from "./UserAvatar";
+import { useSession } from "next-auth/react";
 
 
 
-const Navbar = async () => {
+const Navbar = () => {
   const [isHovered, setIsHovered] = useState(false);
+  const { data: session, status } = useSession();
+  console.log(session);
   
   return (
     <nav className="absolute top-0 left-0 z-10 flex justify-between items-center px-6 md:px-12 py-4 w-full">
@@ -55,7 +58,13 @@ const Navbar = async () => {
       </div>
 
       <div className="flex gap-5">
-        <SignIn />
+        {status === "authenticated" ? (
+          <UserAvatar />
+        ) : status === "loading" ? (
+          <div>Loading...</div>
+        ) : (
+          <SignIn />
+        )}
 
         {/* <Link
           href="/get-started"
