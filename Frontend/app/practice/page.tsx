@@ -6,6 +6,9 @@ import ToggleTheme from "@/components/ThemeToggle";
 import ProblemRequirements from "@/components/ProblemRequirements";
 import SuggestionsPanel from "@/components/SuggestionsPanel";
 import CodeEditor from "@/components/CodeEditor";
+import { useSession } from "next-auth/react";
+import { Toast } from "@/components/ui/toast";
+import { useToast } from "@/components/ui/use-toast";
 
 type ProblemLevel = "beginner" | "intermediate" | "advanced";
 type ThemeMode = "dark" | "light";
@@ -32,7 +35,18 @@ interface SuggestionResult {
   summary: string;
 }
 
+interface UserSubmissionResponse {
+  success: boolean;
+  message?: string;
+  levelUpdated?: boolean;
+  newLevel?: number;
+  newAchievements?: string[];
+  error?: string;
+}
+
 export default function PracticePage() {
+  const { data: session, status } = useSession();
+  const { toast } = useToast();
   const [problemLevel, setProblemLevel] = useState<ProblemLevel>("beginner");
   const [problemStatement, setProblemStatement] =
     useState<ProblemStatement | null>(null);
@@ -179,6 +193,51 @@ export default function PracticePage() {
       const data = await response.json();
       setValidationResult(data);
       setValidationStatus(data.status ? "valid" : "invalid");
+
+      // Only track submissions if user is authenticated
+      if (status === "authenticated" && session?.user?.email) {
+        // Record the submission with user data
+        const submissionResponse = await fetch("/api/users/submission", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email: session.user.email,
+            isAccepted: data.status, // Pass whether the submission was accepted
+          }),
+        });
+
+        const submissionData: UserSubmissionResponse =
+          await submissionResponse.json();
+
+        if (submissionData.success) {
+          // Show level up notification if applicable
+          if (submissionData.levelUpdated && submissionData.newLevel) {
+            toast({
+              title: "Level Up!",
+              description: `Congratulations! You've reached level ${submissionData.newLevel}!`,
+              variant: "default",
+              duration: 5000,
+            });
+          }
+
+          // Show achievement notifications if applicable
+          if (
+            submissionData.newAchievements &&
+            submissionData.newAchievements.length > 0
+          ) {
+            submissionData.newAchievements.forEach((achievement) => {
+              toast({
+                title: "New Achievement Unlocked!",
+                description: achievement,
+                variant: "default",
+                duration: 5000,
+              });
+            });
+          }
+        }
+      }
     } catch (error) {
       console.error("Error validating code:", error);
       setValidationStatus("invalid");

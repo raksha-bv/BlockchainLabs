@@ -1,3 +1,4 @@
+import { ToastProvider } from "@/components/ui/use-toast";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -11,5 +12,9 @@ export default function PracticeLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return <div className="practice-layout">{children}</div>;
+  return (
+    <ToastProvider>
+      <div className="practice-layout">{children}</div>
+    </ToastProvider>
+  );
 }
