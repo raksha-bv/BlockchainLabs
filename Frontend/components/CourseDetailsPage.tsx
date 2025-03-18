@@ -1,33 +1,21 @@
-// pages/courses/[id].tsx
+// CourseDetailPage.tsx
 "use client";
 import React, { useState, useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import Head from "next/head";
 import { useSession } from "next-auth/react";
-import { Course, Lesson, ThemeMode } from "@/types/course";
-
-// Import components
-import CourseHeader from "@/components/course/CourseHeader";
-import CourseSidebar from "@/components/course/CourseSidebar";
-import CourseProgressBar from "@/components/course/CourseProgressBar";
-import LessonHeader from "@/components/course/LessonHeader";
-import ProblemStatementCard from "@/components/course/ProblemStatementCard";
-import LessonContent from "@/components/course/LessonContent";
-import LessonChallenge from "@/components/course/LessonChallenge";
-import LessonNavigation from "@/components/course/LessonNavigation";
-import LearningResources from "@/components/course/LearningResourses";
-import Notification from "@/components/course/Notification";
-
-// Import data
 import { solidityCourse } from "@/utils/solidityCourse";
 import {
   problemStatements,
   getInitialCodeTemplate,
 } from "@/utils/problemStatements";
-import { LightbulbIcon } from "lucide-react";
+import CourseHeader from "@/components/course/CourseHeader";
+import CourseSidebar from "@/components/course/CourseSidebar";
+import CourseContent from "@/components/course/CourseContent";
+import Notification from "@/components/ui/Notification";
+import { CourseWithLessons, Lesson, ThemeMode } from "@/types/course";
 
-// Define full course type with lessons
-const coursesData: { [key: string]: Course } = {
+// Set up courses data
+const coursesData: { [key: string]: CourseWithLessons } = {
   "basics-of-solidity": {
     ...solidityCourse,
     lessons: solidityCourse.lessons.map((lesson) => ({
@@ -52,21 +40,22 @@ export default function CourseDetailPage({
   const searchParams = useSearchParams();
   const lessonId = searchParams.get("lessonId");
   const mainContentRef = useRef<HTMLDivElement>(null);
-  const { data: session, status } = useSession();
+  const { data: session } = useSession();
 
+  // State
+  const [notification, setNotification] = useState({
+    show: false,
+    message: "",
+    type: "",
+  });
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [course, setCourse] = useState<Course | null>(null);
+  const [course, setCourse] = useState<CourseWithLessons | null>(null);
   const [currentLesson, setCurrentLesson] = useState<Lesson | null>(null);
   const [darkMode, setDarkMode] = useState<ThemeMode>("dark");
   const [lessonCompleted, setLessonCompleted] = useState<{
     [key: string]: boolean;
   }>({});
   const [showProblemStatement, setShowProblemStatement] = useState(true);
-  const [notification, setNotification] = useState({
-    show: false,
-    message: "",
-    type: "",
-  });
 
   // Get current lesson index
   const currentLessonIndex =
@@ -102,10 +91,9 @@ export default function CourseDetailPage({
 
   useEffect(() => {
     if (currentLesson) {
-      // Reset code editor state by modifying the LessonChallenge component
+      // Reset code editor state
       const editorElement = document.querySelector("[data-lesson-editor]");
       if (editorElement) {
-        // Reset any editor-related DOM state
         editorElement.innerHTML = "";
       }
     }
@@ -144,7 +132,6 @@ export default function CourseDetailPage({
   // Record course completion
   const recordCourseCompletion = async () => {
     try {
-      // Get user email from session or auth provider
       const email = session?.user?.email;
 
       if (!email) {
@@ -231,6 +218,17 @@ export default function CourseDetailPage({
         <div className="absolute bottom-0 left-0 w-full h-full bg-[radial-gradient(ellipse_at_bottom_right,_rgba(124,58,237,0.1),transparent_70%)]"></div>
       </div>
 
+      {/* Notification */}
+      {notification.show && (
+        <Notification
+          message={notification.message}
+          type={notification.type}
+          onClose={() =>
+            setNotification({ show: false, message: "", type: "" })
+          }
+        />
+      )}
+
       {/* Header */}
       <CourseHeader
         course={course}
@@ -247,104 +245,28 @@ export default function CourseDetailPage({
           currentLesson={currentLesson}
           lessonCompleted={lessonCompleted}
           sidebarOpen={sidebarOpen}
+          setSidebarOpen={setSidebarOpen}
           handleLessonChange={handleLessonChange}
         />
 
         {/* Main Content */}
-        <main
+        <CourseContent
           ref={mainContentRef}
-          className="flex-1 overflow-y-auto relative z-10 h-[calc(100vh-4rem)]"
-        >
-          {/* Backdrop overlay when sidebar is open on mobile */}
-          {sidebarOpen && (
-            <div
-              className="fixed inset-0 bg-black/50 z-10 lg:hidden"
-              onClick={() => setSidebarOpen(false)}
-            ></div>
-          )}
-
-          <div className="max-w-3xl mx-auto px-6 py-8 pb-16">
-            {/* Course progress */}
-            <CourseProgressBar course={course} currentLesson={currentLesson} />
-
-            {/* Title card */}
-            <LessonHeader lesson={currentLesson} />
-
-            {/* Problem Statement Card - Show before content */}
-            {currentLesson.problemStatement && showProblemStatement && (
-              <ProblemStatementCard
-                problemStatement={currentLesson.problemStatement}
-                showProblemStatement={showProblemStatement}
-                setShowProblemStatement={setShowProblemStatement}
-                darkMode={darkMode}
-              />
-            )}
-
-            {/* Collapsed Problem Statement (when hidden) */}
-            {currentLesson.problemStatement && !showProblemStatement && (
-              <button
-                onClick={() => setShowProblemStatement(true)}
-                className={`w-full mb-8 p-4 flex items-center justify-between rounded-lg border ${
-                  darkMode === "dark"
-                    ? "border-violet-900/30 bg-gray-900/40 hover:bg-gray-900/60"
-                    : "border-violet-200 bg-violet-50/70 hover:bg-violet-50"
-                }`}
-              >
-                <div className="flex items-center">
-                  <LightbulbIcon className="w-5 h-5 mr-2 text-violet-400" />
-                  <span
-                    className={
-                      darkMode === "dark" ? "text-white" : "text-violet-900"
-                    }
-                  >
-                    {currentLesson.problemStatement.title}
-                  </span>
-                </div>
-                <span
-                  className={`text-sm ${
-                    darkMode === "dark" ? "text-violet-400" : "text-violet-600"
-                  }`}
-                >
-                  Show Challenge
-                </span>
-              </button>
-            )}
-
-            {/* Markdown content */}
-            <LessonContent lesson={currentLesson} />
-
-            {/* Challenge component (only show if lesson has a problem statement) */}
-            {currentLesson.problemStatement && (
-              <LessonChallenge
-                key={currentLesson.id}
-                lessonId={currentLesson.id}
-                darkMode={darkMode === "dark"}
-                onChallengeComplete={handleChallengeComplete}
-                initialCode={getInitialCodeTemplate(currentLesson.id)}
-                problemStatement={currentLesson.problemStatement}
-              />
-            )}
-
-            {/* Navigation buttons */}
-            <LessonNavigation
-              course={course}
-              currentLesson={currentLesson}
-              lessonCompleted={lessonCompleted}
-              handleLessonChange={handleLessonChange}
-              recordCourseCompletion={recordCourseCompletion}
-            />
-
-            {/* Additional info card */}
-            <LearningResources />
-          </div>
-        </main>
+          course={course}
+          currentLesson={currentLesson}
+          currentLessonIndex={currentLessonIndex}
+          darkMode={darkMode}
+          showProblemStatement={showProblemStatement}
+          setShowProblemStatement={setShowProblemStatement}
+          lessonCompleted={lessonCompleted}
+          canProceedToNextLesson={canProceedToNextLesson}
+          handleLessonChange={handleLessonChange}
+          handleChallengeComplete={handleChallengeComplete}
+          recordCourseCompletion={recordCourseCompletion}
+          sidebarOpen={sidebarOpen}
+          getInitialCodeTemplate={getInitialCodeTemplate}
+        />
       </div>
-
-      {/* Notification component */}
-      <Notification
-        notification={notification}
-        setNotification={setNotification}
-      />
     </div>
   );
 }
