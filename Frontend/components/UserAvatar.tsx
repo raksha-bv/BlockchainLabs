@@ -1,4 +1,5 @@
 import { useSession } from "next-auth/react";
+import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
@@ -55,13 +56,16 @@ export default function UserAvatar() {
 
   return (
     <Link href="/dashboard">
-      <img
-        className={`w-10 h-10 border-2 border-dashed hover:border-solid hover:scale-110 ${
-          isNewUser ? "border-green-400" : "border-pastel-purple"
-        } object-contain rounded-full transition-all duration-500`}
-        src={session.user.image ?? ""}
-        alt="User Avatar"
-      />
+      <Image 
+  width={40}
+  height={40}
+  className={`border-2 border-dashed hover:border-solid hover:scale-110 ${
+    isNewUser ? "border-green-400" : "border-pastel-purple"
+  } object-contain rounded-full transition-all duration-500`}
+  src={session.user.image ?? "/default-avatar.png"}
+  alt="User Avatar"
+  onError={() => console.log("Image failed to load:", session.user?.image)}
+/>
     </Link>
   );
 }
