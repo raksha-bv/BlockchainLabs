@@ -3,6 +3,7 @@
 import React from "react";
 import { Card } from "@/components/ui/card";
 import Editor from "@monaco-editor/react";
+import type { editor } from "monaco-editor";
 import { Button } from "@/components/ui/button";
 import { AnimatePresence, motion } from "framer-motion";
 import { Code2 } from "lucide-react";
@@ -70,8 +71,133 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
     ) {
       monaco.languages.register({ id: "solidity" });
 
+      // Enhanced completion provider with both keywords and variables
+      monaco.languages.registerCompletionItemProvider("solidity", {
+        triggerCharacters: [".", " "],
+        provideCompletionItems: (
+          model: import("monaco-editor").editor.ITextModel,
+          position: import("monaco-editor").Position
+        ) => {
+          const wordInfo = model.getWordUntilPosition(position);
+          const range = {
+            startLineNumber: position.lineNumber,
+            endLineNumber: position.lineNumber,
+            startColumn: wordInfo.startColumn,
+            endColumn: wordInfo.endColumn,
+          };
+
+          const suggestions = [];
+
+          // Get all defined variables in the current file
+          const text = model.getValue();
+          const variableRegex =
+            /\b(uint|int|bool|address|string|bytes|mapping)\s+(\w+)/g;
+          let match;
+
+          while ((match = variableRegex.exec(text)) !== null) {
+            const variableName = match[2];
+            suggestions.push({
+              label: variableName,
+              kind: monaco.languages.CompletionItemKind.Variable,
+              insertText: variableName,
+              range: range,
+            });
+          }
+
+          // Add Solidity keywords
+          const keywords = [
+            "pragma",
+            "solidity",
+            "contract",
+            "interface",
+            "library",
+            "is",
+            "public",
+            "private",
+            "internal",
+            "external",
+            "view",
+            "pure",
+            "payable",
+            "constant",
+            "immutable",
+            "constructor",
+            "function",
+            "modifier",
+            "event",
+            "struct",
+            "enum",
+            "mapping",
+            "if",
+            "else",
+            "for",
+            "while",
+            "do",
+            "break",
+            "continue",
+            "return",
+            "emit",
+            "uint",
+            "uint256",
+            "int",
+            "int256",
+            "bool",
+            "address",
+            "string",
+            "bytes",
+            "memory",
+            "storage",
+            "calldata",
+            "delete",
+            "new",
+            "require",
+            "revert",
+            "assert",
+            "this",
+            "super",
+            "selfdestruct",
+          ];
+
+          keywords.forEach((keyword) => {
+            suggestions.push({
+              label: keyword,
+              kind: monaco.languages.CompletionItemKind.Keyword,
+              insertText: keyword,
+              range: range,
+            });
+          });
+
+          return { suggestions };
+        },
+      });
+
+      monaco.languages.setLanguageConfiguration("solidity", {
+        autoClosingPairs: [
+          { open: "{", close: "}" },
+          { open: "[", close: "]" },
+          { open: "(", close: ")" },
+          { open: '"', close: '"' },
+          { open: "'", close: "'" },
+          { open: "/**", close: " */" },
+        ],
+        brackets: [
+          ["{", "}"],
+          ["[", "]"],
+          ["(", ")"],
+        ],
+        surroundingPairs: [
+          { open: "{", close: "}" },
+          { open: "[", close: "]" },
+          { open: "(", close: ")" },
+          { open: '"', close: '"' },
+          { open: "'", close: "'" },
+          { open: "<", close: ">" },
+        ],
+      });
+
       // Basic Solidity syntax highlighting
       monaco.languages.setMonarchTokensProvider("solidity", {
+        // Keywords list remains the same
         keywords: [
           "pragma",
           "solidity",
@@ -125,6 +251,7 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
           "selfdestruct",
         ],
 
+        // Rest of the syntax provider remains the same
         operators: [
           "=",
           ">",
@@ -264,6 +391,42 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
       });
     }
   };
+  const editorOptions: editor.IStandaloneEditorConstructionOptions = {
+    // Basic editor appearance
+    minimap: { enabled: false },
+    scrollBeyondLastLine: false,
+    fontSize: 14,
+    wordWrap: "on" as const, // Type assertion to ensure literal type
+    fontFamily: "'Fira Code', monospace",
+
+    // Enhanced bracket handling - the critical part
+    autoClosingBrackets: "always",
+    autoClosingQuotes: "always",
+    autoIndent: "full",
+    autoSurround: "languageDefined", // This helps with bracket/quote surrounding
+    matchBrackets: "always", // Always highlight matching brackets
+
+    // Auto closing overtyping (typing over a closing bracket jumps over it instead of inserting)
+    autoClosingOvertype: "always",
+
+    // Enable bracket pair colorization
+    bracketPairColorization: {
+      enabled: true,
+      independentColorPoolPerBracketType: true,
+    },
+
+    // Enable bracket pair colorization
+
+    // Tab behavior
+    tabSize: 4,
+
+    // Support for code folding and indentation guides
+    folding: true,
+    // renderIndentGuides: true,
+
+    // For better autocomplete
+    quickSuggestions: true,
+  };
 
   return (
     <div className="h-full overflow-hidden relative">
@@ -317,13 +480,7 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
               theme === "dark" ? "solidityDarkTheme" : "solidityLightTheme"
             }
             beforeMount={beforeMount}
-            options={{
-              minimap: { enabled: false },
-              scrollBeyondLastLine: false,
-              fontSize: 14,
-              wordWrap: "on",
-              fontFamily: "'Fira Code', monospace",
-            }}
+            options={editorOptions}
           />
         </div>
       </Card>
@@ -435,25 +592,15 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
                       <Editor
                         height="100%"
                         defaultLanguage="solidity"
-                        value={validationResult.error}
+                        value={code}
+                        onChange={(value) => setCode(value || "")}
                         theme={
                           theme === "dark"
                             ? "solidityDarkTheme"
                             : "solidityLightTheme"
                         }
                         beforeMount={beforeMount}
-                        options={{
-                          readOnly: true,
-                          minimap: { enabled: false },
-                          scrollBeyondLastLine: false,
-                          fontSize: 12,
-                          wordWrap: "on",
-                          lineNumbers: "off",
-                          glyphMargin: false,
-                          folding: false,
-                          lineDecorationsWidth: 0,
-                          lineNumbersMinChars: 0,
-                        }}
+                        options={editorOptions}
                       />
                     </div>
                   </div>
