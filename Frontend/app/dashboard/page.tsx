@@ -4,105 +4,180 @@ import React, { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { 
-  User, 
-  Book, 
-  Code, 
-  Award, 
-  ChevronLeft, 
-  FileText, 
-  Calendar, 
-  Clock, 
-  Trophy, 
-  TrendingUp, 
-  ArrowRight,
+import {
+  User,
+  ChevronLeft,
+  FileText,
+  Trophy,
+  TrendingUp,
+  Activity,
+  Award,
   Star,
-  Activity
+  CheckCircle,
+  BarChart2,
+  Calendar,
+  Code,
+  Zap,
+  Medal,
+  Brain,
 } from "lucide-react";
 
-// Simplified types
-interface UserStats {
-  coursesCompleted: number;
-  totalSubmissions: number;
-  streak: number;
-  certificates: number;
+// Type for profile data
+interface UserProfile {
+  username: string;
+  email: string;
+  image: string;
+  courseCompleted: number;
+  submissions: number;
+  acceptedSubmissions: number;
+  AI_Scores: number[];
+  Level: number;
+  Achievement: string[];
+  createdAt: string;
+  updatedAt: string;
+  memberSince?: string;
+  lastActive?: string;
+  averageAIScore?: number;
+  acceptanceRate?: number;
 }
 
-interface CourseProgress {
+// Achievement interface
+interface Achievement {
   id: string;
-  title: string;
+  name: string;
+  description: string;
+  criteria: string;
+  earned: boolean;
   progress: number;
-  lastAccessed: string;
-  category: string;
-  estimatedCompletion?: string;
+  icon?: React.ReactNode;
 }
 
-const EnhancedDashboard = () => {
+const ProfilePage = () => {
   const { data: session, status } = useSession();
   const router = useRouter();
 
-  const [userStats, setUserStats] = useState<UserStats | null>(null);
-  const [courseProgress, setCourseProgress] = useState<CourseProgress[]>([]);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState("inProgress");
+  const [error, setError] = useState<string | null>(null);
+  const [achievements, setAchievements] = useState<Achievement[]>([]);
 
-  // Mock API call
+  // Fetch user profile data from API
   useEffect(() => {
-    const fetchUserData = async () => {
-      // Simulate API delay
-      await new Promise((resolve) => setTimeout(resolve, 800));
+    const fetchUserProfile = async () => {
+      try {
+        if (!session?.user?.email) {
+          throw new Error("User email not available");
+        }
 
-      // Mock data
-      setUserStats({
-        coursesCompleted: 4,
-        totalSubmissions: 37,
-        streak: 16,
-        certificates: 2,
-      });
+        const response = await fetch(
+          `/api/users/profile?email=${encodeURIComponent(session.user.email)}`
+        );
 
-      setCourseProgress([
-        {
-          id: "defi-development",
-          title: "DeFi Protocol Development",
-          progress: 35,
-          lastAccessed: "2 days ago",
-          category: "Advanced",
-          estimatedCompletion: "~3 weeks",
-        },
-        {
-          id: "web3-integration",
-          title: "Web3 Frontend Integration",
-          progress: 78,
-          lastAccessed: "Yesterday",
-          category: "Intermediate",
-          estimatedCompletion: "~5 days",
-        },
-        {
-          id: "basics-of-solidity",
-          title: "Basics of Solidity",
-          progress: 100,
-          lastAccessed: "1 week ago",
-          category: "Beginner",
-        },
-        {
-          id: "smart-contract-auditing",
-          title: "Smart Contract Security & Auditing",
-          progress: 12,
-          lastAccessed: "3 days ago",
-          category: "Advanced",
-          estimatedCompletion: "~6 weeks",
-        },
-      ]);
+        if (!response.ok) {
+          throw new Error("Failed to fetch profile data");
+        }
 
-      setLoading(false);
+        const data = await response.json();
+
+        if (data.success) {
+          setUserProfile(data.profile);
+
+          // Create achievements data with progress
+          const achievementsData = [
+            {
+              id: "Course Master",
+              name: "Course Master",
+              description: "Complete 5 or more courses",
+              criteria: "courseCompleted >= 5",
+              earned: data.profile.Achievement.includes("Course Master"),
+              progress: Math.min(data.profile.courseCompleted / 5, 1),
+              icon: <FileText className="w-4 h-4 text-yellow-400" />,
+            },
+            {
+              id: "Submission Warrior",
+              name: "Submission Warrior",
+              description: "Submit 50 or more tasks",
+              criteria: "submissions >= 50",
+              earned: data.profile.Achievement.includes("Submission Warrior"),
+              progress: Math.min(data.profile.submissions / 50, 1),
+              icon: <Code className="w-4 h-4 text-blue-400" />,
+            },
+            {
+              id: "Quality Coder",
+              name: "Quality Coder",
+              description: "Get 25 or more submissions accepted",
+              criteria: "acceptedSubmissions >= 25",
+              earned: data.profile.Achievement.includes("Quality Coder"),
+              progress: Math.min(data.profile.acceptedSubmissions / 25, 1),
+              icon: <CheckCircle className="w-4 h-4 text-green-400" />,
+            },
+            {
+              id: "Rising Star",
+              name: "Rising Star",
+              description: "Reach level 5 or higher",
+              criteria: "Level >= 5",
+              earned: data.profile.Achievement.includes("Rising Star"),
+              progress: Math.min(data.profile.Level / 5, 1),
+              icon: <Star className="w-4 h-4 text-amber-400" />,
+            },
+            {
+              id: "AI Prodigy",
+              name: "AI Prodigy",
+              description: "Get an average AI score of 90 or higher",
+              criteria: "Average AI_Scores >= 90",
+              earned: data.profile.Achievement.includes("AI Prodigy"),
+              progress:
+                data.profile.AI_Scores.length > 0
+                  ? Math.min(
+                      data.profile.AI_Scores.reduce((a : any, b : any) => a + b, 0) /
+                        data.profile.AI_Scores.length /
+                        90,
+                      1
+                    )
+                  : 0,
+              icon: <Brain className="w-4 h-4 text-violet-400" />,
+            },
+          ];
+          setAchievements(achievementsData);
+        } else {
+          throw new Error(data.error || "Unknown error occurred");
+        }
+      } catch (err) {
+        setError(
+          err instanceof Error ? err.message : "An unknown error occurred"
+        );
+        console.error("Error fetching profile:", err);
+      } finally {
+        setLoading(false);
+      }
     };
 
-    if (status === "authenticated") {
-      fetchUserData();
+    if (status === "authenticated" && session?.user?.email) {
+      fetchUserProfile();
     } else if (status === "unauthenticated") {
       router.push("/login");
     }
-  }, [status, router]);
+  }, [status, session, router]);
+
+  // Format date function - handles invalid dates
+  const formatDate = (dateString : any) => {
+    if (!dateString) return "N/A";
+
+    try {
+      const date = new Date(dateString);
+      // Check if date is valid
+      if (isNaN(date.getTime())) {
+        return "N/A";
+      }
+      return date.toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      });
+    } catch (error) {
+      return "N/A";
+    }
+  };
 
   if (status === "loading" || loading) {
     return (
@@ -112,33 +187,35 @@ const EnhancedDashboard = () => {
             <div className="w-8 h-8 border-4 border-violet-600 border-t-transparent rounded-full animate-spin"></div>
           </div>
           <p className="text-center mt-4 text-gray-400">
-            Loading your blockchain learning journey...
+            Loading your profile...
           </p>
         </div>
       </div>
     );
   }
 
-  if (!session || !session.user) {
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-950 text-gray-100 flex items-center justify-center">
+        <div className="bg-gray-900/60 backdrop-blur-sm rounded-lg border border-violet-900/50 p-8 max-w-md w-full shadow-lg shadow-violet-900/20">
+          <p className="text-center text-red-400">Error: {error}</p>
+          <button
+            onClick={() => router.push("/")}
+            className="block w-full mt-4 text-center bg-violet-600 hover:bg-violet-500 text-white font-medium py-2 px-4 rounded-lg transition-all duration-200"
+          >
+            Return to Home
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!session || !session.user || !userProfile) {
     return null;
   }
 
-  const filterCourses = () => {
-    if (activeTab === "completed") {
-      return courseProgress.filter((course) => course.progress === 100);
-    } else {
-      return courseProgress.filter((course) => course.progress < 100);
-    }
-  };
-
-  // Calculate recommended next course
-  const getRecommendedCourse = () => {
-    const inProgress = courseProgress.filter((course) => course.progress < 100);
-    return inProgress.sort((a, b) => b.progress - a.progress)[0] || null;
-  };
-
-  const recommendedCourse = getRecommendedCourse();
-  const filteredCourses = filterCourses();
+  // Calculate last active date
+  const lastActive = userProfile.lastActive || userProfile.updatedAt;
 
   return (
     <div className="min-h-screen bg-gray-950 text-gray-100">
@@ -179,20 +256,17 @@ const EnhancedDashboard = () => {
             Back to Home
           </Link>
           <div className="text-sm bg-violet-900/30 px-3 py-1 rounded-full border border-violet-700/30">
-            <span className="text-violet-300">Last Login: </span>
-            <span className="text-gray-300">Today, 10:23 AM</span>
+            <span className="text-violet-300">Last Active: </span>
+            <span className="text-gray-300">{formatDate(lastActive)}</span>
           </div>
         </div>
 
-        {/* Dashboard title */}
-        <h1 className="text-2xl font-bold mb-6 flex items-center">
-          <Code className="mr-2 mt-1 text-violet-400" />
-          BlockChain Labs
-        </h1>
+        {/* Profile title */}
+        <h1 className="text-2xl font-bold mb-6">Your Profile</h1>
 
-        {/* Main content grid - alternative layout */}
+        {/* Main content grid */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          {/* Left column - User profile & stats */}
+          {/* Left column - User profile & stats - UNCHANGED */}
           <div className="lg:col-span-4 space-y-6">
             {/* User profile card */}
             <div className="bg-gray-900/60 backdrop-blur-sm rounded-lg border border-violet-900/50 p-6 shadow-lg shadow-violet-900/10 relative overflow-hidden">
@@ -220,22 +294,25 @@ const EnhancedDashboard = () => {
 
                 {/* User level badge */}
                 <div className="absolute top-0 right-0 bg-gradient-to-r from-violet-600 to-fuchsia-600 px-3 py-1 rounded-full text-xs font-bold shadow-md">
-                  Level 4
+                  Level {userProfile.Level}
                 </div>
 
                 {/* User info */}
                 <h1 className="text-xl font-bold mt-4">
-                  {session.user.name || "Blockchain Developer"}
+                  {userProfile.username || session.user.name}
                 </h1>
                 <p className="text-gray-400 text-sm">
-                  {session.user.email || ""}
+                  {userProfile.email || session.user.email}
                 </p>
 
-                {/* User streak badge */}
+                {/* Member since badge */}
                 <div className="flex items-center mt-2 bg-violet-900/20 px-3 py-1 rounded-full">
                   <Activity className="w-3 h-3 mr-1 text-violet-400" />
                   <span className="text-xs text-violet-300">
-                    {userStats?.streak || 0} day streak
+                    Member since{" "}
+                    {formatDate(
+                      userProfile.memberSince || userProfile.createdAt
+                    )}
                   </span>
                 </div>
               </div>
@@ -244,10 +321,10 @@ const EnhancedDashboard = () => {
               <div className="grid grid-cols-2 gap-4 w-full mt-6">
                 <div className="bg-gray-800/50 rounded-lg p-4 text-center border border-violet-900/20 hover:border-violet-700/40 transition-colors group">
                   <div className="flex items-center justify-center mb-2 text-violet-400 group-hover:text-violet-300 transition-colors">
-                    <Book className="w-5 h-5" />
+                    <FileText className="w-5 h-5" />
                   </div>
                   <p className="text-2xl font-bold group-hover:text-white transition-colors">
-                    {userStats?.coursesCompleted || 0}
+                    {userProfile.courseCompleted}
                   </p>
                   <p className="text-xs text-gray-400">Courses Completed</p>
                 </div>
@@ -256,7 +333,7 @@ const EnhancedDashboard = () => {
                     <FileText className="w-5 h-5" />
                   </div>
                   <p className="text-2xl font-bold group-hover:text-white transition-colors">
-                    {userStats?.totalSubmissions || 0}
+                    {userProfile.submissions}
                   </p>
                   <p className="text-xs text-gray-400">Total Submissions</p>
                 </div>
@@ -265,329 +342,287 @@ const EnhancedDashboard = () => {
                     <Trophy className="w-5 h-5" />
                   </div>
                   <p className="text-2xl font-bold group-hover:text-white transition-colors">
-                    {userStats?.certificates || 0}
+                    {userProfile.acceptedSubmissions}
                   </p>
-                  <p className="text-xs text-gray-400">Certificates</p>
+                  <p className="text-xs text-gray-400">Accepted Submissions</p>
                 </div>
                 <div className="bg-gray-800/50 rounded-lg p-4 text-center border border-violet-900/20 hover:border-violet-700/40 transition-colors group">
                   <div className="flex items-center justify-center mb-2 text-violet-400 group-hover:text-violet-300 transition-colors">
                     <TrendingUp className="w-5 h-5" />
                   </div>
                   <p className="text-2xl font-bold group-hover:text-white transition-colors">
-                    72
+                    {userProfile.averageAIScore || 0}
                   </p>
-                  <p className="text-xs text-gray-400">XP Points</p>
+                  <p className="text-xs text-gray-400">Avg. AI Score</p>
                 </div>
               </div>
             </div>
-
-            {/* Recommended Next Course */}
-            {recommendedCourse && (
-              <div className="bg-gray-900/60 backdrop-blur-sm rounded-lg border border-violet-900/50 overflow-hidden shadow-lg shadow-violet-900/10">
-                <div className="p-4 border-b border-violet-900/20 bg-violet-900/20 flex justify-between items-center">
-                  <h2 className="text-base font-semibold flex items-center">
-                    <Star className="w-4 h-4 mr-2 text-yellow-500" />
-                    Recommended Next
-                  </h2>
-                  <span className="text-xs px-2 py-1 rounded-full bg-violet-700/30 text-violet-300 border border-violet-700/30">
-                    {recommendedCourse.category}
-                  </span>
-                </div>
-                <div className="p-4">
-                  <h3 className="font-medium text-lg mb-2 text-white">
-                    {recommendedCourse.title}
-                  </h3>
-                  <div className="flex justify-between text-xs mb-2">
-                    <span className="text-gray-400 flex items-center">
-                      <Clock className="w-3 h-3 mr-1" />
-                      Last: {recommendedCourse.lastAccessed}
-                    </span>
-                    {recommendedCourse.estimatedCompletion && (
-                      <span className="text-violet-400 flex items-center">
-                        <Calendar className="w-3 h-3 mr-1" />
-                        {recommendedCourse.estimatedCompletion}
-                      </span>
-                    )}
-                  </div>
-                  <div className="w-full bg-gray-700/50 rounded-full h-2.5 mt-4">
-                    <div
-                      className="bg-gradient-to-r from-violet-600 to-fuchsia-600 h-2.5 rounded-full relative"
-                      style={{ width: `${recommendedCourse.progress}%` }}
-                    >
-                      <div className="absolute -right-1 -top-1 w-4 h-4 bg-white rounded-full border-2 border-violet-600 shadow-sm"></div>
-                    </div>
-                  </div>
-                  <div className="flex justify-between text-xs mt-1">
-                    <span className="font-medium text-violet-300">
-                      {recommendedCourse.progress}% complete
-                    </span>
-                    <span className="text-gray-400">
-                      {100 - recommendedCourse.progress}% remaining
-                    </span>
-                  </div>
-                  <Link
-                    href={`/courses/${recommendedCourse.id}`}
-                    className="block w-full mt-4 text-center bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 text-white font-medium py-2 px-4 rounded-lg transition-all duration-200 shadow-md shadow-violet-900/20 hover:shadow-lg hover:shadow-violet-900/30"
-                  >
-                    Continue Learning
-                  </Link>
-                </div>
-              </div>
-            )}
 
             {/* Achievements Section */}
             <div className="bg-gray-900/60 backdrop-blur-sm rounded-lg border border-violet-900/50 overflow-hidden shadow-lg shadow-violet-900/10">
               <div className="p-4 border-b border-violet-900/20 bg-violet-900/20">
                 <h2 className="text-base font-semibold flex items-center">
-                  <Award className="w-4 h-4 mr-2 text-yellow-500" />
-                  Recent Achievements
+                  <Trophy className="w-4 h-4 mr-2 text-yellow-500" />
+                  Achievements
                 </h2>
               </div>
               <div className="p-4">
                 <div className="space-y-3">
-                  <div className="flex items-center p-2 bg-gray-800/50 rounded-lg border border-violet-900/20">
-                    <div className="flex-shrink-0 w-10 h-10 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center">
-                      <Trophy className="w-5 h-5 text-white" />
+                  {userProfile.Achievement &&
+                  userProfile.Achievement.length > 0 ? (
+                    userProfile.Achievement.map((achievementId, index) => {
+                      const achievementData = achievements.find(
+                        (a) => a.id === achievementId
+                      );
+                      return (
+                        <div
+                          key={index}
+                          className="flex items-center p-2 bg-gray-800/50 rounded-lg border border-violet-900/20"
+                        >
+                          <div className="flex-shrink-0 w-10 h-10 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center">
+                            {achievementData?.icon || (
+                              <Trophy className="w-5 h-5 text-white" />
+                            )}
+                          </div>
+                          <div className="ml-3">
+                            <h3 className="text-sm font-medium">
+                              {achievementId}
+                            </h3>
+                            <p className="text-xs text-gray-400">
+                              {achievementData?.description ||
+                                "Achievement unlocked"}
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    })
+                  ) : (
+                    <div className="text-center py-4 text-gray-400">
+                      No achievements earned yet
                     </div>
-                    <div className="ml-3">
-                      <h3 className="text-sm font-medium">
-                        Smart Contract Master
-                      </h3>
-                      <p className="text-xs text-gray-400">
-                        Completed Solidity course
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center p-2 bg-gray-800/50 rounded-lg border border-violet-900/20">
-                    <div className="flex-shrink-0 w-10 h-10 bg-gradient-to-br from-violet-400 to-indigo-500 rounded-full flex items-center justify-center">
-                      <Activity className="w-5 h-5 text-white" />
-                    </div>
-                    <div className="ml-3">
-                      <h3 className="text-sm font-medium">14 Day Streak</h3>
-                      <p className="text-xs text-gray-400">
-                        Consistent learning
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center p-2 bg-gray-800/50 rounded-lg border border-violet-900/20">
-                    <div className="flex-shrink-0 w-10 h-10 bg-gradient-to-br from-green-400 to-cyan-500 rounded-full flex items-center justify-center">
-                      <Code className="w-5 h-5 text-white" />
-                    </div>
-                    <div className="ml-3">
-                      <h3 className="text-sm font-medium">Web3 Integrator</h3>
-                      <p className="text-xs text-gray-400">
-                        First app deployment
-                      </p>
-                    </div>
-                  </div>
+                  )}
                 </div>
-                <Link
-                  href="/achievements"
-                  className="block w-full mt-4 text-center text-violet-400 hover:text-violet-300 text-sm font-medium py-2 transition-colors"
-                >
-                  View All Achievements
-                  <ArrowRight className="w-3 h-3 inline-block ml-1" />
-                </Link>
               </div>
             </div>
           </div>
 
-          {/* Right column - Course progress */}
+          {/* Right column - Improved Layout */}
           <div className="lg:col-span-8 space-y-6">
-            {/* Course progress card */}
-            <div className="bg-gray-900/60 backdrop-blur-sm rounded-lg border border-violet-900/50 overflow-hidden shadow-lg shadow-violet-900/10">
-              <div className="p-4 border-b border-violet-900/20 bg-violet-900/20">
-                <div className="flex justify-between items-center">
-                  <h2 className="text-base font-semibold">
-                    Your Learning Progress
-                  </h2>
-                  <div className="flex space-x-2">
-                    <button
-                      className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
-                        activeTab === "inProgress"
-                          ? "bg-violet-600 text-white"
-                          : "bg-gray-800 text-gray-400 hover:bg-gray-700"
-                      }`}
-                      onClick={() => setActiveTab("inProgress")}
-                    >
-                      In Progress
-                    </button>
-                    <button
-                      className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
-                        activeTab === "completed"
-                          ? "bg-violet-600 text-white"
-                          : "bg-gray-800 text-gray-400 hover:bg-gray-700"
-                      }`}
-                      onClick={() => setActiveTab("completed")}
-                    >
-                      Completed
-                    </button>
-                  </div>
+            {/* Submission Stats Card - Expanded */}
+            <div className="bg-gray-900/60 backdrop-blur-sm rounded-lg border border-violet-900/50 p-6 shadow-lg shadow-violet-900/10">
+              <h2 className="text-base font-semibold mb-4 flex items-center">
+                <FileText className="w-4 h-4 mr-2 text-violet-400" />
+                Submission Analytics
+              </h2>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <div className="bg-gray-800/50 rounded-lg p-4 text-center border border-violet-900/20">
+                  <p className="text-3xl font-bold">
+                    {userProfile.submissions}
+                  </p>
+                  <p className="text-xs text-gray-400 mt-1">
+                    Total Submissions
+                  </p>
+                </div>
+                <div className="bg-gray-800/50 rounded-lg p-4 text-center border border-violet-900/20">
+                  <p className="text-3xl font-bold">
+                    {userProfile.acceptedSubmissions}
+                  </p>
+                  <p className="text-xs text-gray-400 mt-1">Accepted</p>
+                </div>
+                <div className="bg-gray-800/50 rounded-lg p-4 text-center border border-violet-900/20">
+                  <p className="text-3xl font-bold">
+                    {userProfile.acceptanceRate || 0}%
+                  </p>
+                  <p className="text-xs text-gray-400 mt-1">Acceptance Rate</p>
                 </div>
               </div>
-              <div className="p-4">
-                {filteredCourses.length === 0 ? (
-                  <div className="text-center py-10">
-                    <Book className="w-10 h-10 text-gray-600 mx-auto mb-3" />
-                    <h3 className="text-gray-400">
-                      No{" "}
-                      {activeTab === "completed" ? "completed" : "in-progress"}{" "}
-                      courses found
-                    </h3>
-                    <Link
-                      href="/courses"
-                      className="inline-block mt-4 text-violet-400 hover:text-violet-300 text-sm font-medium transition-colors"
-                    >
-                      Browse Available Courses
-                    </Link>
+
+              {/* Submission quality visualization */}
+              <div className="relative pt-3">
+                <div className="flex justify-between mb-2">
+                  <span className="text-xs text-gray-400">
+                    Submission Quality
+                  </span>
+                </div>
+                <div className="w-full h-6 bg-gray-800 rounded-lg overflow-hidden relative">
+                  <div
+                    className="h-full bg-gradient-to-r from-violet-600 to-fuchsia-600 rounded-l-lg"
+                    style={{ width: `${userProfile.acceptanceRate || 0}%` }}
+                  ></div>
+                  <div className="absolute inset-0 flex items-center justify-center text-xs font-semibold">
+                    {userProfile.acceptanceRate || 0}% acceptance rate
                   </div>
-                ) : (
-                  <div className="space-y-4">
-                    {filteredCourses.map((course) => (
-                      <div
-                        key={course.id}
-                        className="bg-gray-800/50 rounded-lg p-4 border border-violet-900/20 hover:border-violet-700/40 transition-all hover:shadow-md hover:shadow-violet-900/20"
-                      >
-                        <div className="flex justify-between items-center mb-2">
-                          <h3 className="font-medium text-white">
-                            {course.title}
-                          </h3>
-                          <span className="text-xs px-2 py-1 rounded-full bg-violet-700/30 text-violet-300 border border-violet-700/30">
-                            {course.category}
-                          </span>
-                        </div>
-                        <div className="flex justify-between text-xs mb-2">
-                          <span className="text-gray-400 flex items-center">
-                            <Clock className="w-3 h-3 mr-1" />
-                            Last: {course.lastAccessed}
-                          </span>
-                          {course.estimatedCompletion && (
-                            <span className="text-violet-400 flex items-center">
-                              <Calendar className="w-3 h-3 mr-1" />
-                              {course.estimatedCompletion}
-                            </span>
-                          )}
-                        </div>
-                        <div className="w-full bg-gray-700/50 rounded-full h-2.5 mt-4">
-                          <div
-                            className="bg-gradient-to-r from-violet-600 to-fuchsia-600 h-2.5 rounded-full relative"
-                            style={{ width: `${course.progress}%` }}
-                          >
-                            {course.progress < 100 && (
-                              <div className="absolute -right-1 -top-1 w-4 h-4 bg-white rounded-full border-2 border-violet-600 shadow-sm"></div>
-                            )}
-                          </div>
-                        </div>
-                        <div className="flex justify-between text-xs mt-1">
-                          <span className="font-medium text-violet-300">
-                            {course.progress}% complete
-                          </span>
-                          {course.progress < 100 ? (
-                            <span className="text-gray-400">
-                              {100 - course.progress}% remaining
-                            </span>
-                          ) : (
-                            <span className="text-green-400">Completed</span>
-                          )}
-                        </div>
-                        <div className="mt-4">
-                          <Link
-                            href={`/courses/${course.id}`}
-                            className={`block w-full text-center ${
-                              course.progress === 100
-                                ? "bg-green-600 hover:bg-green-500"
-                                : "bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500"
-                            } text-white font-medium py-2 px-4 rounded-lg transition-all duration-200 shadow-md shadow-violet-900/20 hover:shadow-lg hover:shadow-violet-900/30`}
-                          >
-                            {course.progress === 100
-                              ? "Review Course"
-                              : "Continue Learning"}
-                          </Link>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-                <Link
-                  href="/courses"
-                  className="block w-full mt-6 text-center text-violet-400 hover:text-violet-300 text-sm font-medium py-2 transition-colors"
-                >
-                  View All Courses
-                  <ArrowRight className="w-3 h-3 inline-block ml-1" />
-                </Link>
+                </div>
               </div>
             </div>
 
-            {/* Dashboard panels */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Weekly activity panel */}
-              <div className="bg-gray-900/60 backdrop-blur-sm rounded-lg border border-violet-900/50 p-4 shadow-lg shadow-violet-900/10">
-                <h2 className="text-base font-semibold mb-4">
-                  Weekly Activity
-                </h2>
-                <div className="flex justify-between items-end h-32">
-                  {["M", "T", "W", "T", "F", "S", "S"].map((day, index) => (
-                    <div key={day} className="flex flex-col items-center">
-                      <div
-                        className="w-6 bg-gradient-to-t from-violet-600 to-fuchsia-600 rounded-t-md"
-                        style={{
-                          height: `${[20, 45, 65, 30, 80, 55, 35][index]}%`,
-                          opacity: index === 4 ? 1 : 0.7,
-                        }}
-                      ></div>
-                      <div
-                        className={`text-xs mt-2 ${
-                          index === 4
-                            ? "text-violet-400 font-bold"
-                            : "text-gray-400"
-                        }`}
-                      >
-                        {day}
-                      </div>
-                    </div>
-                  ))}
+            {/* AI Score Analytics Card */}
+            <div className="bg-gray-900/60 backdrop-blur-sm rounded-lg border border-violet-900/50 p-6 shadow-lg shadow-violet-900/10">
+              <h2 className="text-base font-semibold mb-4 flex items-center">
+                <Brain className="w-4 h-4 mr-2 text-violet-400" />
+                AI Score Analytics
+              </h2>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+                <div className="bg-gray-800/50 rounded-lg p-4 text-center border border-violet-900/20">
+                  <p className="text-3xl font-bold">
+                    {userProfile.averageAIScore || 0}
+                  </p>
+                  <p className="text-xs text-gray-400 mt-1">Average AI Score</p>
                 </div>
-                <div className="text-xs text-gray-400 mt-4 text-center">
-                  Your best day was Friday with 3 hours of learning
+                <div className="bg-gray-800/50 rounded-lg p-4 text-center border border-violet-900/20">
+                  <p className="text-3xl font-bold">
+                    {userProfile.AI_Scores.length > 0
+                      ? Math.max(...userProfile.AI_Scores)
+                      : 0}
+                  </p>
+                  <p className="text-xs text-gray-400 mt-1">Highest Score</p>
+                </div>
+                <div className="bg-gray-800/50 rounded-lg p-4 text-center border border-violet-900/20">
+                  <p className="text-3xl font-bold">
+                    {userProfile.AI_Scores.length}
+                  </p>
+                  <p className="text-xs text-gray-400 mt-1">
+                    Scored Submissions
+                  </p>
                 </div>
               </div>
 
-              {/* Upcoming sessions panel */}
-              <div className="bg-gray-900/60 backdrop-blur-sm rounded-lg border border-violet-900/50 p-4 shadow-lg shadow-violet-900/10">
-                <h2 className="text-base font-semibold mb-4">
-                  Upcoming Sessions
-                </h2>
-                <div className="space-y-3">
-                  <div className="flex items-center p-2 bg-gray-800/50 rounded-lg border border-violet-900/20">
-                    <div className="flex-shrink-0 w-10 h-10 bg-gradient-to-br from-blue-400 to-indigo-500 rounded-full flex items-center justify-center">
-                      <Calendar className="w-5 h-5 text-white" />
+              {/* AI Score visualization */}
+              <div className="relative pt-3">
+                <div className="flex justify-between mb-2">
+                  <span className="text-xs text-gray-400">
+                    AI Score Distribution
+                  </span>
+                </div>
+                <div className="grid grid-cols-5 gap-1 h-20">
+                  {[...Array(5)].map((_, i) => {
+                    const scoreRange = i * 20;
+                    const nextRange = (i + 1) * 20;
+                    const count = userProfile.AI_Scores.filter(
+                      (score) => score >= scoreRange && score < nextRange
+                    ).length;
+                    const percentage =
+                      userProfile.AI_Scores.length > 0
+                        ? (count / userProfile.AI_Scores.length) * 100
+                        : 0;
+
+                    return (
+                      <div key={i} className="flex flex-col items-center">
+                        <div className="w-full bg-gray-800 rounded-t-sm relative h-16 flex items-end">
+                          <div
+                            className="w-full bg-gradient-to-t from-violet-600 to-fuchsia-600 rounded-t-sm"
+                            style={{ height: `${percentage}%` }}
+                          ></div>
+                        </div>
+                        <span className="text-xs text-gray-400 mt-1">
+                          {scoreRange}-{nextRange - 1}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+
+            {/* Achievement Progress */}
+            <div className="bg-gray-900/60 backdrop-blur-sm rounded-lg border border-violet-900/50 p-6 shadow-lg shadow-violet-900/10">
+              <h2 className="text-base font-semibold mb-4 flex items-center">
+                <Award className="w-4 h-4 mr-2 text-violet-400" />
+                Achievement Progress
+              </h2>
+
+              <div className="space-y-4">
+                {achievements.map((achievement) => (
+                  <div
+                    key={achievement.id}
+                    className={`p-3 rounded-lg border ${
+                      achievement.earned
+                        ? "bg-violet-900/30 border-violet-700/50"
+                        : "bg-gray-800/50 border-violet-900/20"
+                    }`}
+                  >
+                    <div className="flex items-center mb-2">
+                      <div
+                        className={`w-8 h-8 rounded-full flex items-center justify-center mr-3 ${
+                          achievement.earned
+                            ? "bg-gradient-to-r from-yellow-400 to-orange-500"
+                            : "bg-gray-700"
+                        }`}
+                      >
+                        {achievement.icon || (
+                          <Trophy className="w-4 h-4 text-white" />
+                        )}
+                      </div>
+                      <div>
+                        <h3 className="text-sm font-medium flex items-center">
+                          {achievement.name}
+                          {achievement.earned && (
+                            <CheckCircle className="w-3 h-3 ml-2 text-green-400" />
+                          )}
+                        </h3>
+                        <p className="text-xs text-gray-400">
+                          {achievement.description}
+                        </p>
+                      </div>
                     </div>
-                    <div className="ml-3">
-                      <h3 className="text-sm font-medium">
-                        Live Coding Session
-                      </h3>
-                      <p className="text-xs text-gray-400">Today, 6:00 PM</p>
+                    <div className="w-full h-2 bg-gray-800 rounded-full overflow-hidden">
+                      <div
+                        className={`h-full rounded-full ${
+                          achievement.earned
+                            ? "bg-gradient-to-r from-green-400 to-emerald-500"
+                            : "bg-gradient-to-r from-violet-600 to-fuchsia-600"
+                        }`}
+                        style={{ width: `${achievement.progress * 100}%` }}
+                      ></div>
+                    </div>
+                    <div className="flex justify-between mt-1">
+                      <span className="text-xs text-gray-400">
+                        {Math.round(achievement.progress * 100)}%
+                      </span>
+                      <span className="text-xs text-gray-400">
+                        {achievement.earned ? "Completed" : "In Progress"}
+                      </span>
                     </div>
                   </div>
-                  <div className="flex items-center p-2 bg-gray-800/50 rounded-lg border border-violet-900/20">
-                    <div className="flex-shrink-0 w-10 h-10 bg-gradient-to-br from-purple-400 to-pink-500 rounded-full flex items-center justify-center">
-                      <User className="w-5 h-5 text-white" />
-                    </div>
-                    <div className="ml-3">
-                      <h3 className="text-sm font-medium">Mentorship Call</h3>
-                      <p className="text-xs text-gray-400">
-                        Tomorrow, 10:00 AM
-                      </p>
-                    </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Recent Activity Card */}
+            <div className="bg-gray-900/60 backdrop-blur-sm rounded-lg border border-violet-900/50 p-6 shadow-lg shadow-violet-900/10">
+              <h2 className="text-base font-semibold mb-4 flex items-center">
+                <Activity className="w-4 h-4 mr-2 text-violet-400" />
+                Account Statistics
+              </h2>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="flex items-center p-3 bg-gray-800/50 rounded-lg border border-violet-900/20">
+                  <div className="w-10 h-10 bg-violet-900/30 rounded-full flex items-center justify-center mr-3">
+                    <Calendar className="w-5 h-5 text-violet-400" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-medium">Member Since</h3>
+                    <p className="text-xs text-gray-400">
+                      {formatDate(
+                        userProfile.memberSince || userProfile.createdAt
+                      )}
+                    </p>
                   </div>
                 </div>
-                <Link
-                  href="/schedule"
-                  className="block w-full mt-4 text-center text-violet-400 hover:text-violet-300 text-sm font-medium py-2 transition-colors"
-                >
-                  View Full Schedule
-                  <ArrowRight className="w-3 h-3 inline-block ml-1" />
-                </Link>
+
+                <div className="flex items-center p-3 bg-gray-800/50 rounded-lg border border-violet-900/20">
+                  <div className="w-10 h-10 bg-violet-900/30 rounded-full flex items-center justify-center mr-3">
+                    <Star className="w-5 h-5 text-violet-400" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-medium">Current Level</h3>
+                    <p className="text-xs text-gray-400">
+                      Level {userProfile.Level} User
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -597,4 +632,4 @@ const EnhancedDashboard = () => {
   );
 };
 
-export default EnhancedDashboard;
+export default ProfilePage;

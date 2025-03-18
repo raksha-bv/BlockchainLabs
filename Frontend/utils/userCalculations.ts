@@ -39,7 +39,7 @@ export function calculateUserLevel(userData: UserData): number {
 export function calculateAverageAIScore(aiScores: number[]): number {
   if (aiScores.length === 0) return 0;
   const sum = aiScores.reduce((acc, score) => acc + score, 0);
-  return Math.round((sum / aiScores.length) * 10) / 10; // Round to 1 decimal place
+  return Math.round((sum / aiScores.length)); // Round to 1 decimal place
 }
 
 // Check and grant achievements

@@ -193,7 +193,7 @@ export default function PracticePage() {
       const data = await response.json();
       setValidationResult(data);
       setValidationStatus(data.status ? "valid" : "invalid");
-      const ai_score = data.score;
+      const ai_score = Number(data.score);
 
       // Only track submissions if user is authenticated
       if (status === "authenticated" && session?.user?.email) {
