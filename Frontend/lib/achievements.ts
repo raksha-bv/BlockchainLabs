@@ -1,7 +1,7 @@
 // Define or import the user object
 const user = {
   data: {
-    Achievement: [],
+    Achievement: [] as string[],
     courseCompleted: 0,
     submissions: 0,
     acceptedSubmissions: 0,
