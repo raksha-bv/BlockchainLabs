@@ -17,6 +17,7 @@ import LessonChallenge from "@/components/course/LessonChallenge";
 import LessonNavigation from "@/components/course/LessonNavigation";
 import LearningResources from "@/components/course/LearningResourses";
 import Notification from "@/components/course/Notification";
+import { ChatbotPopup } from "@/components/ChatbotPopup";
 
 // Import data
 import { solidityCourse } from "@/utils/solidityCourse";
@@ -225,6 +226,11 @@ export default function CourseDetailPage({
 
   return (
     <div className="min-h-screen bg-gray-950 text-gray-100">
+      <ChatbotPopup
+        buttonText="Chat with AI"
+        initialMessage="Hello! I'm your blockchain assistant. How can I help you today?"
+        title="Blockchain AI"
+      />
       {/* Background gradients */}
       <div className="absolute inset-0 z-0">
         <div className="absolute top-0 right-0 w-full h-full bg-[radial-gradient(ellipse_at_top_left,_rgba(124,58,237,0.15),transparent_70%)]"></div>
