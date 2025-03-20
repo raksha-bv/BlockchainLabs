@@ -1,7 +1,6 @@
 // pages/courses/[id].tsx
-"use client";
-import React, { useState, useEffect, useRef } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+"use client"
+import React, { useState, useEffect, useRef } from "react"; // Change to router import for Pages Router
 import Head from "next/head";
 import { useSession } from "next-auth/react";
 import { Course, Lesson, ThemeMode } from "@/types/course";
@@ -26,6 +25,7 @@ import {
   getInitialCodeTemplate,
 } from "@/utils/problemStatements";
 import { LightbulbIcon } from "lucide-react";
+import { useRouter } from "next/router";
 
 // Define full course type with lessons
 const coursesData: { [key: string]: Course } = {
@@ -38,20 +38,11 @@ const coursesData: { [key: string]: Course } = {
   },
 };
 
-export default function CourseDetailPage({
-  params,
-}: {
-  params: { id: string };
-}) {
-  // Use React.use() to unwrap the params Promise
-  const unwrappedParams = React.use(
-    params as unknown as Promise<{ id: string }>
-  );
-  const id = unwrappedParams.id;
-
+export default function CourseDetailPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const lessonId = searchParams.get("lessonId");
+  const searchParams = new URLSearchParams(window.location.search);
+  const id = searchParams.get("id");
+  const lessonId = searchParams.get("lessonId"); // Get params from URLSearchParams
   const mainContentRef = useRef<HTMLDivElement>(null);
   const { data: session, status } = useSession();
 
@@ -75,13 +66,13 @@ export default function CourseDetailPage({
 
   useEffect(() => {
     // Fetch course data based on the route id
-    if (id) {
+    if (id && typeof id === "string") {
       const foundCourse = coursesData[id];
       if (foundCourse) {
         setCourse(foundCourse);
 
         // Set initial lesson
-        if (lessonId) {
+        if (lessonId && typeof lessonId === "string") {
           const lesson = foundCourse.lessons.find((l) => l.id === lessonId);
           if (lesson) {
             setCurrentLesson(lesson);
@@ -95,9 +86,11 @@ export default function CourseDetailPage({
     }
 
     // Load completed lessons from localStorage
-    const savedProgress = localStorage.getItem(`course_progress_${id}`);
-    if (savedProgress) {
-      setLessonCompleted(JSON.parse(savedProgress));
+    if (id && typeof id === "string") {
+      const savedProgress = localStorage.getItem(`course_progress_${id}`);
+      if (savedProgress) {
+        setLessonCompleted(JSON.parse(savedProgress));
+      }
     }
   }, [id, lessonId]);
 
@@ -116,7 +109,9 @@ export default function CourseDetailPage({
   const handleLessonChange = (lesson: Lesson) => {
     setCurrentLesson(lesson);
     // Update URL
-    router.push(`/courses/${id}?lessonId=${lesson.id}`);
+    if (typeof id === "string") {
+      router.push(`/courses/${id}?lessonId=${lesson.id}`);
+    }
 
     // Scroll main content to top
     if (mainContentRef.current) {
@@ -126,7 +121,7 @@ export default function CourseDetailPage({
 
   // Handle challenge completion
   const handleChallengeComplete = () => {
-    if (currentLesson) {
+    if (currentLesson && typeof id === "string") {
       const updatedCompletions = {
         ...lessonCompleted,
         [currentLesson.id]: true,
