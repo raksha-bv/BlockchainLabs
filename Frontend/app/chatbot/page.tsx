@@ -3,6 +3,7 @@
 import ReactMarkdown from "react-markdown";
 import { useState, useRef, useEffect } from "react";
 import { Send, Square, Moon, Sun } from "lucide-react";
+import BackButton from "@/components/BackButton";
 
 export default function Home() {
   const [messages, setMessages] = useState<
@@ -152,6 +153,7 @@ export default function Home() {
       }`}
       style={darkMode ? { backgroundColor: darkColors.background } : {}}
     >
+      <BackButton />
       <div className="w-full max-w-4xl p-4 h-screen flex flex-col">
         {/* Header */}
         <header className="text-center py-6 relative">

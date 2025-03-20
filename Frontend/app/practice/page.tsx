@@ -9,6 +9,7 @@ import CodeEditor from "@/components/CodeEditor";
 import { useSession } from "next-auth/react";
 import { Toast } from "@/components/ui/toast";
 import { useToast } from "@/components/ui/use-toast";
+import BackButton from "@/components/BackButton";
 
 type ProblemLevel = "beginner" | "intermediate" | "advanced";
 type ThemeMode = "dark" | "light";
@@ -209,17 +210,17 @@ export default function PracticePage() {
           }),
         });
 
-        const ai_score_response = await fetch("/api/users/ai-score",{
+        const ai_score_response = await fetch("/api/users/ai-score", {
           method: "POST",
-          headers:{
-            "Content-Type" : "application/json",
+          headers: {
+            "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            email : session.user.email,
-            score : ai_score,
+            email: session.user.email,
+            score: ai_score,
           }),
-        })
-        
+        });
+
         const submissionData: UserSubmissionResponse =
           await submissionResponse.json();
 
@@ -289,6 +290,7 @@ export default function PracticePage() {
         userSelect: "none",
       }}
     >
+      <BackButton />
       <div className="h-full w-full flex flex-col p-4">
         <div className="flex justify-between items-center mb-4">
           <div className="flex items-center">

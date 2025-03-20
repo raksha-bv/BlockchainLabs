@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import ToggleTheme from "@/components/ThemeToggle";
+import BackButton from "@/components/BackButton";
 import CodeEditorComponent from "@/components/CodeEditor";
 import Suggestions from "@/components/Suggestions";
 import { GripVertical } from "lucide-react";
@@ -205,6 +206,7 @@ export default function CodeEditorPage() {
         color: colors.textPrimary,
       }}
     >
+      <BackButton />
       <div className="h-full w-full flex flex-col p-4">
         <div className="flex justify-between items-center mb-4">
           <div className="flex items-center">
@@ -212,6 +214,7 @@ export default function CodeEditorPage() {
               className="w-3 h-10 mr-3 rounded"
               style={{ backgroundColor: colors.accent }}
             ></div>
+
             <h1
               className="text-3xl font-bold"
               style={{ color: colors.textPrimary }}

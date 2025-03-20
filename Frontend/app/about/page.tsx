@@ -2,10 +2,12 @@
 import React from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
+import BackButton from "@/components/BackButton";
 
 const AboutPage = () => {
   return (
     <div className="min-h-screen bg-gray-950 text-white">
+      <BackButton />
       {/* Header section with background effects */}
       <section className="px-6 py-20 relative overflow-hidden">
         {/* Background effects */}

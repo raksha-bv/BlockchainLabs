@@ -16,6 +16,7 @@ import {
   Award,
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
+import BackButton from "@/components/BackButton";
 
 // Course type definition
 export interface Course {
@@ -165,6 +166,7 @@ export default function CoursesPage() {
 
   return (
     <div className="min-h-screen bg-gray-950 text-gray-100">
+      <BackButton />
       {/* Simplified background */}
       <div className="absolute inset-0 z-0">
         <div className="absolute top-0 right-0 w-full h-full bg-[radial-gradient(ellipse_at_top_left,_rgba(124,58,237,0.15),transparent_70%)]"></div>
