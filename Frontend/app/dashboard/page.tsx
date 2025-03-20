@@ -498,10 +498,10 @@ const ProfilePage = () => {
                 </div>
                 <div className="grid grid-cols-5 gap-1 h-20">
                   {[...Array(5)].map((_, i) => {
-                    const scoreRange = i * 20;
-                    const nextRange = (i + 1) * 20;
+                    const scoreRange = i * 20 + (i > 0 ? 1 : 0); // Adjust for non-overlapping ranges
+                    const nextRange = (i + 1) * 20; // Inclusive upper bound
                     const count = userProfile.AI_Scores.filter(
-                      (score) => score >= scoreRange && score < nextRange
+                      (score) => score >= scoreRange && score <= nextRange
                     ).length;
                     const percentage =
                       userProfile.AI_Scores.length > 0
@@ -517,7 +517,7 @@ const ProfilePage = () => {
                           ></div>
                         </div>
                         <span className="text-xs text-gray-400 mt-1">
-                          {scoreRange}-{nextRange - 1}
+                          {scoreRange}-{nextRange}
                         </span>
                       </div>
                     );
