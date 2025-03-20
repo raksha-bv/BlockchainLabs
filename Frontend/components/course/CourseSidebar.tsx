@@ -36,45 +36,47 @@ export const CourseSidebar: React.FC<CourseSidebarProps> = ({
         </div>
       </div>
       <nav className="p-3 h-full overflow-y-auto">
-        {course.lessons.map((lesson, index) => (
-          <button
-            key={lesson.id}
-            className={`w-full text-left p-3 rounded-lg mb-2 transition-colors duration-300 ${
-              currentLesson.id === lesson.id
-                ? "bg-violet-900/30 text-white"
-                : "hover:bg-gray-800/60 text-gray-300"
-            } ${
-              // Show lessons as locked if previous lesson not completed
-              index > 0 && !lessonCompleted[course.lessons[index - 1].id]
-                ? "opacity-50 pointer-events-none"
-                : ""
-            }`}
-            onClick={() => handleLessonChange(lesson)}
-            disabled={
-              index > 0 && !lessonCompleted[course.lessons[index - 1].id]
-            }
-          >
-            <div className="flex items-center">
-              <span
-                className={`w-6 h-6 rounded-full flex items-center justify-center text-xs mr-3 ${
-                  currentLesson.id === lesson.id
-                    ? "bg-violet-700 text-white"
-                    : lessonCompleted[lesson.id]
-                    ? "bg-green-600 text-white"
-                    : "bg-gray-800 text-gray-400"
-                }`}
-              >
-                {lessonCompleted[lesson.id] ? "✓" : index + 1}
-              </span>
-              <span className="text-sm font-medium">{lesson.title}</span>
-              {lesson.problemStatement && (
-                <span className="ml-2 text-xs bg-violet-700/40 text-violet-300 px-1.5 py-0.5 rounded">
-                  Challenge
-                </span>
-              )}
-            </div>
-          </button>
-        ))}
+        {course.lessons.map((lesson, index) => {
+          // A lesson should only be locked if:
+          // 1. It's not the first lesson
+          // 2. The previous lesson is not completed
+          // 3. This lesson itself is not completed
+          const previousNotCompleted =
+            index > 0 && !lessonCompleted[course.lessons[index - 1].id];
+          const currentNotCompleted = !lessonCompleted[lesson.id];
+          const isLocked = previousNotCompleted && currentNotCompleted;
+
+          return (
+            <button
+              key={lesson.id}
+              className={`w-full text-left p-3 rounded-lg mb-2 transition-colors duration-300 ${
+                currentLesson.id === lesson.id
+                  ? "bg-violet-900/30 text-white"
+                  : "hover:bg-gray-800/60 text-gray-300"
+              } ${isLocked ? "opacity-50 pointer-events-none" : ""}`}
+              onClick={() => handleLessonChange(lesson)}
+              disabled={isLocked}
+            >
+              <div className="flex items-center">
+                <div
+                  className={`flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs mr-3 ${
+                    currentLesson.id === lesson.id
+                      ? "bg-violet-700 text-white"
+                      : "bg-gray-800 text-gray-400"
+                  }`}
+                >
+                  {index + 1}
+                </div>
+                <span className="text-sm font-medium">{lesson.title}</span>
+                {lesson.problemStatement && (
+                  <span className="ml-2 text-xs bg-violet-700/40 text-violet-300 px-1.5 py-0.5 rounded">
+                    Challenge
+                  </span>
+                )}
+              </div>
+            </button>
+          );
+        })}
       </nav>
     </aside>
   );
