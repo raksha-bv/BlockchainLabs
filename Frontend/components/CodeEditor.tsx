@@ -592,7 +592,7 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
                       <Editor
                         height="100%"
                         defaultLanguage="solidity"
-                        value={code}
+                        value={validationResult.error}
                         onChange={(value) => setCode(value || "")}
                         theme={
                           theme === "dark"
