@@ -1,5 +1,4 @@
-"use client";
-
+"use cleint";
 import React, { useState } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import CodeEditor from "@/components/CodeEditor"; // Using your existing component
