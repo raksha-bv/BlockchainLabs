@@ -39,72 +39,12 @@ const courses: Course[] = [
     description:
       "Learn the fundamentals of Solidity programming and smart contract development for blockchain applications. Perfect for beginners who want to start their blockchain journey.",
     level: "Beginner",
-    duration: "3 weeks",
+    duration: "1 week",
     lessonCount: 7,
     image: "/solidity.png",
     tags: ["Solidity", "Smart Contracts", "Ethereum"],
-    popularity: 4280,
-  },
-  {
-    id: "advanced-smart-contracts",
-    title: "Advanced Smart Contracts",
-    description:
-      "Dive deeper into complex smart contract patterns, security considerations, and optimization techniques. Learn gas optimization, security auditing, and advanced contract patterns.",
-    level: "Intermediate",
-    duration: "6 weeks",
-    lessonCount: 15,
-    image: "",
-    tags: ["Security", "Gas Optimization", "Design Patterns"],
-    popularity: 2150,
-  },
-  {
-    id: "defi-development",
-    title: "DeFi Protocol Development",
-    description:
-      "Build decentralized finance applications including lending protocols, exchanges, and yield farming systems. Master the concepts behind modern DeFi architecture.",
-    level: "Advanced",
-    duration: "8 weeks",
-    lessonCount: 20,
-    image: "",
-    tags: ["DeFi", "Lending", "DEX"],
-    popularity: 1800,
-  },
-  {
-    id: "nft-marketplace",
-    title: "NFT Marketplace Creation",
-    description:
-      "Learn to build a complete NFT marketplace from scratch. Understand token standards, metadata storage, and marketplace smart contracts for buying and selling digital assets.",
-    level: "Intermediate",
-    duration: "5 weeks",
-    lessonCount: 12,
-    image: "",
-    tags: ["NFTs", "ERC-721", "IPFS"],
-    popularity: 3600,
-  },
-  {
-    id: "blockchain-security",
-    title: "Blockchain Security Fundamentals",
-    description:
-      "Learn to identify and prevent common vulnerabilities in smart contracts. Study real-world exploits and implement secure coding practices for blockchain applications.",
-    level: "Advanced",
-    duration: "4 weeks",
-    lessonCount: 10,
-    image: "",
-    tags: ["Security", "Auditing", "Bug Bounty"],
-    popularity: 2800,
-  },
-  {
-    id: "web3-integration",
-    title: "Web3 Frontend Integration",
-    description:
-      "Connect your frontend applications to blockchain networks. Learn to use Web3.js, ethers.js, and other libraries to build decentralized application interfaces.",
-    level: "Beginner",
-    duration: "4 weeks",
-    lessonCount: 8,
-    image: "",
-    tags: ["Web3.js", "React", "dApps"],
-    popularity: 3200,
-  },
+    popularity: 1,
+  }
 ];
 
 export default function CoursesPage() {
@@ -206,13 +146,12 @@ export default function CoursesPage() {
             <div className="bg-gray-900/60 rounded-lg border border-violet-900/50 p-4 flex items-center">
               <Code className="w-5 h-5 text-violet-400 mr-3" />
               <div>
-                <p className="text-gray-400 text-sm">Learning Hours</p>
+                <p className="text-gray-400 text-sm">Lessons</p>
                 <h3 className="text-xl font-bold text-white">
                   {courses.reduce(
-                    (sum, course) => sum + course.lessonCount * 2,
+                    (sum, course) => sum + course.lessonCount,
                     0
                   )}
-                  +
                 </h3>
               </div>
             </div>
@@ -224,7 +163,6 @@ export default function CoursesPage() {
                   {courses
                     .reduce((sum, course) => sum + course.popularity, 0)
                     .toLocaleString()}
-                  +
                 </h3>
               </div>
             </div>
