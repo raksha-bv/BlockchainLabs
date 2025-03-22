@@ -114,6 +114,22 @@ export function ClientCourse({ courseId, lessonId }: ClientCourseProps) {
 
   // Handle lesson change
   const handleLessonChange = (lesson: Lesson) => {
+    // If we're moving away from a lesson without a challenge, mark it as completed
+    if (currentLesson && !currentLesson.problemStatement) {
+      const updatedCompletions = {
+        ...lessonCompleted,
+        [currentLesson.id]: true,
+      };
+
+      setLessonCompleted(updatedCompletions);
+
+      // Save progress to localStorage
+      localStorage.setItem(
+        `course_progress_${courseId}`,
+        JSON.stringify(updatedCompletions)
+      );
+    }
+
     setCurrentLesson(lesson);
     // Update URL
     router.push(`/courses/${courseId}?lessonId=${lesson.id}`);

@@ -1,6 +1,6 @@
 import React from "react";
-import { Clock } from "lucide-react";
-import { Course, Lesson, ThemeMode } from "@/types/course";
+import { Clock, Check } from "lucide-react";
+import { Course, Lesson } from "@/types/course";
 
 interface CourseSidebarProps {
   course: Course;
@@ -17,6 +17,37 @@ export const CourseSidebar: React.FC<CourseSidebarProps> = ({
   lessonCompleted,
   handleLessonChange,
 }) => {
+  // Find the current lesson index
+  const currentLessonIndex = course.lessons.findIndex(
+    (l) => l.id === currentLesson.id
+  );
+
+  // A lesson is unlocked if:
+  // 1. It's the current lesson
+  // 2. It's lesson #1
+  // 3. It's before the current lesson (meaning user has seen it)
+  // 4. It has been completed
+  // 5. The previous lesson has been completed
+  const isLessonUnlocked = (lesson: Lesson, index: number) => {
+    // Current lesson is always accessible
+    if (lesson.id === currentLesson.id) return true;
+
+    // First lesson is always accessible
+    if (index === 0) return true;
+
+    // Lesson is completed already
+    if (lessonCompleted[lesson.id]) return true;
+
+    // It's a previous lesson (user has already seen it)
+    if (index < currentLessonIndex) return true;
+
+    // Previous lesson is completed
+    const prevLessonId = course.lessons[index - 1]?.id;
+    if (prevLessonId && lessonCompleted[prevLessonId]) return true;
+
+    return false;
+  };
+
   return (
     <aside
       className={`w-64 border-r border-violet-900/30 flex-shrink-0 transition-all duration-300 lg:translate-x-0 absolute lg:relative z-20 h-[calc(100vh-4rem)] bg-gray-900/80 backdrop-blur-sm overflow-hidden ${
@@ -37,35 +68,32 @@ export const CourseSidebar: React.FC<CourseSidebarProps> = ({
       </div>
       <nav className="p-3 h-full overflow-y-auto">
         {course.lessons.map((lesson, index) => {
-          // A lesson should only be locked if:
-          // 1. It's not the first lesson
-          // 2. The previous lesson is not completed
-          // 3. This lesson itself is not completed
-          const previousNotCompleted =
-            index > 0 && !lessonCompleted[course.lessons[index - 1].id];
-          const currentNotCompleted = !lessonCompleted[lesson.id];
-          const isLocked = previousNotCompleted && currentNotCompleted;
+          const isCompleted = !!lessonCompleted[lesson.id];
+          const isCurrentLesson = currentLesson.id === lesson.id;
+          const isUnlocked = isLessonUnlocked(lesson, index);
 
           return (
             <button
               key={lesson.id}
               className={`w-full text-left p-3 rounded-lg mb-2 transition-colors duration-300 ${
-                currentLesson.id === lesson.id
+                isCurrentLesson
                   ? "bg-violet-900/30 text-white"
                   : "hover:bg-gray-800/60 text-gray-300"
-              } ${isLocked ? "opacity-50 pointer-events-none" : ""}`}
+              } ${!isUnlocked ? "opacity-50 pointer-events-none" : ""}`}
               onClick={() => handleLessonChange(lesson)}
-              disabled={isLocked}
+              disabled={!isUnlocked}
             >
               <div className="flex items-center">
                 <div
                   className={`flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs mr-3 ${
-                    currentLesson.id === lesson.id
+                    isCompleted
+                      ? "bg-green-600 text-white"
+                      : isCurrentLesson
                       ? "bg-violet-700 text-white"
                       : "bg-gray-800 text-gray-400"
                   }`}
                 >
-                  {index + 1}
+                  {isCompleted ? <Check className="w-3.5 h-3.5" /> : index + 1}
                 </div>
                 <span className="text-sm font-medium">{lesson.title}</span>
                 {lesson.problemStatement && (
