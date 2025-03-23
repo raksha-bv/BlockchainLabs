@@ -19,9 +19,10 @@ export interface Course {
   id: string;
   title: string;
   description: string;
-  level: string;
+  level: "Beginner" | "Intermediate" | "Advanced";
   duration: string;
   lessonCount: number;
   image: string;
-  lessons: Lesson[];
+  tags: string[];
+  registrations: number;
 }

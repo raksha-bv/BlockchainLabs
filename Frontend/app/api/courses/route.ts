@@ -1,49 +1,20 @@
+// app/api/courses/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import clientPromise from "@/lib/mongodb";
 
-export async function POST(req: NextRequest) {
+export async function GET(req: NextRequest) {
   try {
-    const body = await req.json();
-    const {
-      title,
-      description,
-      level,
-      estimatedDuration,
-      topics,
-      motivation,
-      name,
-      email,
-    } = body;
-
-    // Validate required fields
-    if (!title || !description || !topics || !motivation || !name || !email) {
-      return NextResponse.json(
-        { success: false, error: "Please fill in all required fields" },
-        { status: 400 }
-      );
-    }
-
-    // Connect to MongoDB
     const client = await clientPromise;
     const db = client.db("Web3LabsDB");
-    const coursesCollection = db.collection("courseRequests");
+    const coursesCollection = db.collection("courses");
 
-    // Insert course request into MongoDB
-    await coursesCollection.insertOne({
-      title,
-      description,
-      level,
-      estimatedDuration,
-      topics,
-      motivation,
-      name,
-      email,
-      status: "pending", // Initial status for tracking
-      timestamp: new Date(),
-    });
+    const courses = await coursesCollection.find({}).toArray();
 
     return NextResponse.json(
-      { success: true, message: "Course request submitted successfully!" },
+      {
+        success: true,
+        courses,
+      },
       { status: 200 }
     );
   } catch (error) {

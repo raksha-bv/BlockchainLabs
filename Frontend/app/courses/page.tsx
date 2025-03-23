@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import BackButton from "@/components/BackButton";
+import { useSession } from "next-auth/react"; // Make sure you have next-auth set up
 
 // Course type definition
 export interface Course {
@@ -28,92 +29,61 @@ export interface Course {
   lessonCount: number;
   image: string;
   tags: string[];
-  popularity: number;
+  registrations: number;
 }
 
-// Course data
-const courses: Course[] = [
-  {
-    id: "basics-of-solidity",
-    title: "Basics of Solidity",
-    description:
-      "Learn the fundamentals of Solidity programming and smart contract development for blockchain applications. Perfect for beginners who want to start their blockchain journey.",
-    level: "Beginner",
-    duration: "3 weeks",
-    lessonCount: 7,
-    image: "/solidity.png",
-    tags: ["Solidity", "Smart Contracts", "Ethereum"],
-    popularity: 4280,
-  },
-  {
-    id: "advanced-smart-contracts",
-    title: "Advanced Smart Contracts",
-    description:
-      "Dive deeper into complex smart contract patterns, security considerations, and optimization techniques. Learn gas optimization, security auditing, and advanced contract patterns.",
-    level: "Intermediate",
-    duration: "6 weeks",
-    lessonCount: 15,
-    image: "",
-    tags: ["Security", "Gas Optimization", "Design Patterns"],
-    popularity: 2150,
-  },
-  {
-    id: "defi-development",
-    title: "DeFi Protocol Development",
-    description:
-      "Build decentralized finance applications including lending protocols, exchanges, and yield farming systems. Master the concepts behind modern DeFi architecture.",
-    level: "Advanced",
-    duration: "8 weeks",
-    lessonCount: 20,
-    image: "",
-    tags: ["DeFi", "Lending", "DEX"],
-    popularity: 1800,
-  },
-  {
-    id: "nft-marketplace",
-    title: "NFT Marketplace Creation",
-    description:
-      "Learn to build a complete NFT marketplace from scratch. Understand token standards, metadata storage, and marketplace smart contracts for buying and selling digital assets.",
-    level: "Intermediate",
-    duration: "5 weeks",
-    lessonCount: 12,
-    image: "",
-    tags: ["NFTs", "ERC-721", "IPFS"],
-    popularity: 3600,
-  },
-  {
-    id: "blockchain-security",
-    title: "Blockchain Security Fundamentals",
-    description:
-      "Learn to identify and prevent common vulnerabilities in smart contracts. Study real-world exploits and implement secure coding practices for blockchain applications.",
-    level: "Advanced",
-    duration: "4 weeks",
-    lessonCount: 10,
-    image: "",
-    tags: ["Security", "Auditing", "Bug Bounty"],
-    popularity: 2800,
-  },
-  {
-    id: "web3-integration",
-    title: "Web3 Frontend Integration",
-    description:
-      "Connect your frontend applications to blockchain networks. Learn to use Web3.js, ethers.js, and other libraries to build decentralized application interfaces.",
-    level: "Beginner",
-    duration: "4 weeks",
-    lessonCount: 8,
-    image: "",
-    tags: ["Web3.js", "React", "dApps"],
-    popularity: 3200,
-  },
-];
-
 export default function CoursesPage() {
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [userCourses, setUserCourses] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [filter, setFilter] = useState<
     "all" | "Beginner" | "Intermediate" | "Advanced"
   >("all");
   const [darkMode, setDarkMode] = useState(false);
   const router = useRouter();
+  const { data: session } = useSession();
+
+  // Fetch courses from the database
+  useEffect(() => {
+    const fetchCourses = async () => {
+      try {
+        const response = await fetch("/api/courses");
+        if (response.ok) {
+          const data = await response.json();
+          setCourses(data.courses);
+        }
+      } catch (error) {
+        console.error("Failed to fetch courses:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchCourses();
+  }, []);
+
+  // Fetch user's registered courses if user is logged in
+  useEffect(() => {
+    if (session?.user?.email) {
+      const fetchUserCourses = async () => {
+        try {
+          const response = await fetch(
+            `/api/users/courses?email=${session.user?.email}`
+          );
+          if (response.ok) {
+            const data = await response.json();
+            // Extract just the course IDs
+            setUserCourses(data.courses.map((course: any) => course.id));
+          }
+        } catch (error) {
+          console.error("Failed to fetch user courses:", error);
+        }
+      };
+
+      fetchUserCourses();
+    }
+  }, [session]);
 
   // Apply dark mode class to document
   useEffect(() => {
@@ -139,6 +109,51 @@ export default function CoursesPage() {
     localStorage.setItem("theme", darkMode ? "dark" : "light");
   }, [darkMode]);
 
+  // Handler for course registration
+  const handleCourseRegistration = async (courseId: string) => {
+    if (!session?.user?.email) {
+      // Redirect to login if user is not logged in
+      router.push("/login?callbackUrl=/courses");
+      return;
+    }
+
+    try {
+      const response = await fetch("/api/courses/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: session.user.email,
+          courseId: courseId,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        // If successful and it's a new registration, add to user courses
+        if (data.isNewRegistration) {
+          setUserCourses((prev) => [...prev, courseId]);
+
+          // Update the course count in the UI (optional)
+          setCourses(
+            courses.map((course) =>
+              course.id === courseId
+                ? { ...course, registrations: course.registrations + 1 }
+                : course
+            )
+          );
+        }
+
+        // Navigate to the course page
+        router.push(`/courses/${courseId}`);
+      }
+    } catch (error) {
+      console.error("Failed to register for course:", error);
+    }
+  };
+
   // Filter courses based on search term and level filter
   const filteredCourses = courses.filter(
     (course) =>
@@ -163,6 +178,14 @@ export default function CoursesPage() {
         return "text-gray-400 bg-gray-400/20";
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-950 text-gray-100 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-violet-500"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-950 text-gray-100">
@@ -222,7 +245,7 @@ export default function CoursesPage() {
                 <p className="text-gray-400 text-sm">Active Students</p>
                 <h3 className="text-xl font-bold text-white">
                   {courses
-                    .reduce((sum, course) => sum + course.popularity, 0)
+                    .reduce((sum, course) => sum + course.registrations, 0)
                     .toLocaleString()}
                   +
                 </h3>
@@ -346,7 +369,7 @@ export default function CoursesPage() {
                       </span>
                       <div className="flex items-center text-gray-400 text-sm">
                         <Users className="w-3 h-3 mr-1" />
-                        {course.popularity.toLocaleString()}
+                        {course.registrations.toLocaleString()}
                       </div>
                     </div>
 
@@ -380,12 +403,21 @@ export default function CoursesPage() {
                     </div>
                   </div>
 
-                  <Link
-                    href={`/courses/${course.id}`}
-                    className="block bg-gray-800 hover:bg-violet-700 px-5 py-3 text-center text-sm font-medium text-white transition-colors"
-                  >
-                    Explore Course
-                  </Link>
+                  {userCourses.includes(course.id) ? (
+                    <Link
+                      href={`/courses/${course.id}`}
+                      className="block bg-violet-700 hover:bg-violet-600 px-5 py-3 text-center text-sm font-medium text-white transition-colors"
+                    >
+                      Continue Learning
+                    </Link>
+                  ) : (
+                    <button
+                      onClick={() => handleCourseRegistration(course.id)}
+                      className="block w-full bg-gray-800 hover:bg-violet-700 px-5 py-3 text-center text-sm font-medium text-white transition-colors"
+                    >
+                      Start Course
+                    </button>
+                  )}
                 </div>
               ))
             )}

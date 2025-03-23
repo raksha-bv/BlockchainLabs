@@ -7,7 +7,7 @@ export const solidityCourse = {
   duration: "4 weeks",
   lessonCount: 7,
   tags: ["solidity", "basics"],
-  popularity: 1,
+  registrations: 1,
   image: "/images/solidity-basics.png",
   lessons: [
     {
