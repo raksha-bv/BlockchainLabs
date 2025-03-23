@@ -229,13 +229,9 @@ export default function CoursesPage() {
             <div className="bg-gray-900/60 rounded-lg border border-violet-900/50 p-4 flex items-center">
               <Code className="w-5 h-5 text-violet-400 mr-3" />
               <div>
-                <p className="text-gray-400 text-sm">Learning Hours</p>
+                <p className="text-gray-400 text-sm">Lessons</p>
                 <h3 className="text-xl font-bold text-white">
-                  {courses.reduce(
-                    (sum, course) => sum + course.lessonCount * 2,
-                    0
-                  )}
-                  +
+                  {courses.reduce((sum, course) => sum + course.lessonCount, 0)}
                 </h3>
               </div>
             </div>
@@ -247,7 +243,6 @@ export default function CoursesPage() {
                   {courses
                     .reduce((sum, course) => sum + course.registrations, 0)
                     .toLocaleString()}
-                  +
                 </h3>
               </div>
             </div>

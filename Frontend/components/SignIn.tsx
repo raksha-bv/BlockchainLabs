@@ -8,7 +8,7 @@ export default function SignIn() {
   return (
     <button
       onClick={handleSignIn}
-      className="px-5 py-2 bg-violet-700 hover:bg-violet-600 rounded-md text-white transition-all transform hover:scale-105 hover:shadow-lg hover:shadow-violet-500/30 flex items-center gap-2"
+      className="w-full flex items-center justify-center px-5 py-2 bg-violet-700 hover:bg-violet-600 rounded-md text-white transition-all transform hover:scale-105 hover:shadow-lg hover:shadow-violet-500/30 gap-2"
     >
       <svg
         xmlns="http://www.w3.org/2000/svg"
