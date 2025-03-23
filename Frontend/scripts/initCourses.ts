@@ -1,15 +1,23 @@
-// scripts/initCourses.ts
 import { migrateCourses } from "@/lib/courseService";
-import { Course } from "@/types/course";
-import { solidityCourse } from "@/utils/solidityCourse";
+import { courses } from "@/utils/solidityCourse";
+import mongoose from "mongoose";
+import dotenv from "dotenv";
 
-// Course data to initialize the database
-const initialCourses: Course[] = [solidityCourse];
+dotenv.config(); // Load environment variables
+
+const MONGODB_URI = process.env.MONGODB_URI || "";
 
 async function init() {
   try {
-    const result = await migrateCourses(initialCourses);
+    await mongoose.connect(MONGODB_URI);
+    console.log("Connected to MongoDB");
+
+    // Upsert courses into MongoDB
+    const result = await migrateCourses(courses);
     console.log(result.message);
+
+    await mongoose.disconnect();
+    console.log("Disconnected from MongoDB");
     process.exit(0);
   } catch (error) {
     console.error("Failed to initialize courses:", error);

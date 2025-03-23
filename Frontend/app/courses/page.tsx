@@ -351,9 +351,9 @@ export default function CoursesPage() {
               filteredCourses.map((course) => (
                 <div
                   key={course.id}
-                  className="bg-gray-900/60 border border-violet-900/30 rounded-lg overflow-hidden hover:border-violet-700 transition-all group"
+                  className="bg-gray-900/60 border border-violet-900/30 rounded-lg overflow-hidden hover:border-violet-700 transition-all group flex flex-col h-full"
                 >
-                  <div className="p-5">
+                  <div className="p-5 flex-grow flex flex-col">
                     <div className="flex justify-between items-start mb-3">
                       <span
                         className={`text-xs font-medium px-2 py-0.5 rounded-full ${getDifficultyColor(
@@ -371,10 +371,11 @@ export default function CoursesPage() {
                     <h3 className="text-lg font-semibold mb-2 text-white group-hover:text-violet-400 transition-colors">
                       {course.title}
                     </h3>
-                    <p className="text-gray-400 text-sm mb-4 line-clamp-2">
+                    <p className="text-gray-400 text-sm mb-4 line-clamp-2 flex-grow">
                       {course.description}
                     </p>
 
+                    {/* Tags moved to bottom */}
                     <div className="flex flex-wrap gap-1 mb-3">
                       {course.tags.slice(0, 3).map((tag) => (
                         <span
@@ -386,7 +387,8 @@ export default function CoursesPage() {
                       ))}
                     </div>
 
-                    <div className="flex justify-between items-center text-sm text-gray-400">
+                    {/* Duration and lesson count moved to bottom */}
+                    <div className="flex justify-between items-center text-sm text-gray-400 mt-auto">
                       <div className="flex items-center">
                         <Clock className="w-4 h-4 mr-1" />
                         {course.duration}

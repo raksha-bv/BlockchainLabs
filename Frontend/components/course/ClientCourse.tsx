@@ -20,7 +20,7 @@ import Notification from "./Notification";
 import { ChatbotPopup } from "@/components/ChatbotPopup";
 
 // Import data
-import { solidityCourse } from "@/utils/solidityCourse";
+import { courses } from "@/utils/solidityCourse"; // Import the array
 import {
   problemStatements,
   getInitialCodeTemplate,
@@ -28,15 +28,18 @@ import {
 import { LightbulbIcon } from "lucide-react";
 
 // Define full course type with lessons
-const coursesData: { [key: string]: Course } = {
-  "basics-of-solidity": {
-    ...solidityCourse,
-    lessons: solidityCourse.lessons.map((lesson) => ({
+const coursesData: { [key: string]: Course } = {};
+
+// Loop through all courses and map lessons with problem statements
+courses.forEach((course) => {
+  coursesData[course.id] = {
+    ...course,
+    lessons: course.lessons.map((lesson) => ({
       ...lesson,
       problemStatement: problemStatements[lesson.id],
     })),
-  },
-};
+  };
+});
 
 // Inside ClientCourse.tsx
 export type ClientCourseProps = {

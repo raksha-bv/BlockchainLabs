@@ -3,20 +3,15 @@ import clientPromise from "@/lib/mongodb";
 import { Course } from "@/app/courses/page"; // Import your Course interface
 
 export async function migrateCourses(courses: Course[]) {
-  const client = await clientPromise;
-  const db = client.db("Web3LabsDB");
-  const coursesCollection = db.collection("courses");
+  try {
+    const client = await clientPromise;
+    const db = client.db("Web3LabsDB");
+    const coursesCollection = db.collection("courses");
 
-  // For each course in the array
-  for (const course of courses) {
-    // Check if course already exists
-    const existingCourse = await coursesCollection.findOne({ id: course.id });
-
-    if (existingCourse) {
-      // Update existing course without changing registrations
-      await coursesCollection.updateOne(
-        { id: course.id },
-        {
+    const bulkOps = courses.map((course) => ({
+      updateOne: {
+        filter: { id: course.id },
+        update: {
           $set: {
             title: course.title,
             description: course.description,
@@ -25,17 +20,27 @@ export async function migrateCourses(courses: Course[]) {
             lessonCount: course.lessonCount,
             image: course.image,
             tags: course.tags,
-            // Don't update registrations here to preserve the count
           },
-        }
+          $setOnInsert: { registrations: 0 }, // Preserve existing registrations if present
+        },
+        upsert: true,
+      },
+    }));
+
+    if (bulkOps.length > 0) {
+      const result = await coursesCollection.bulkWrite(bulkOps);
+      console.log(
+        `✔️ Courses migration complete. Modified: ${result.modifiedCount}, Inserted: ${result.upsertedCount}`
       );
     } else {
-      // Insert new course
-      await coursesCollection.insertOne(course);
+      console.log("⚠️ No courses to migrate.");
     }
-  }
 
-  return { success: true, message: "Courses migrated successfully" };
+    return { success: true, message: "Courses migrated successfully" };
+  } catch (error) {
+    console.error("❌ Failed to migrate courses:", error);
+    throw new Error(`Course migration failed: ${error}`);
+  }
 }
 
 export async function getAllCourses() {
