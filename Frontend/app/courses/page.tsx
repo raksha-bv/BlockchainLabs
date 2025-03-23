@@ -113,7 +113,7 @@ export default function CoursesPage() {
   const handleCourseRegistration = async (courseId: string) => {
     if (!session?.user?.email) {
       // Redirect to login if user is not logged in
-      router.push("/login?callbackUrl=/courses");
+      router.push("/gain-course-access");
       return;
     }
 
