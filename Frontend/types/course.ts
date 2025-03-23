@@ -24,5 +24,6 @@ export interface Course {
   lessonCount: number;
   image: string;
   tags: string[];
+  lessons: Lesson[];
   registrations: number;
 }
