@@ -259,8 +259,6 @@ export function ClientCourse({ courseId, lessonId }: ClientCourseProps) {
       {/* Header */}
       <CourseHeader
         course={course}
-        darkMode={darkMode}
-        setDarkMode={setDarkMode}
         sidebarOpen={sidebarOpen}
         setSidebarOpen={setSidebarOpen}
       />

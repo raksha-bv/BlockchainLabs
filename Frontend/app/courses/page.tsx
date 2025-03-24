@@ -3,8 +3,6 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
-  Moon,
-  Sun,
   Clock,
   Book,
   Search,
@@ -40,7 +38,6 @@ export default function CoursesPage() {
   const [filter, setFilter] = useState<
     "all" | "Beginner" | "Intermediate" | "Advanced"
   >("all");
-  const [darkMode, setDarkMode] = useState(false);
   const router = useRouter();
   const { data: session } = useSession();
 
@@ -86,28 +83,28 @@ export default function CoursesPage() {
   }, [session]);
 
   // Apply dark mode class to document
-  useEffect(() => {
-    if (darkMode) {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-    }
-  }, [darkMode]);
+  // useEffect(() => {
+  //   if (darkMode) {
+  //     document.documentElement.classList.add("dark");
+  //   } else {
+  //     document.documentElement.classList.remove("dark");
+  //   }
+  // }, [darkMode]);
 
-  // Initialize dark mode from localStorage
-  useEffect(() => {
-    const savedTheme = localStorage.getItem("theme");
-    if (savedTheme === "dark") {
-      setDarkMode(true);
-    } else if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
-      setDarkMode(true);
-    }
-  }, []);
+  // // Initialize dark mode from localStorage
+  // useEffect(() => {
+  //   const savedTheme = localStorage.getItem("theme");
+  //   if (savedTheme === "dark") {
+  //     setDarkMode(true);
+  //   } else if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+  //     setDarkMode(true);
+  //   }
+  // }, []);
 
-  // Save dark mode preference to localStorage
-  useEffect(() => {
-    localStorage.setItem("theme", darkMode ? "dark" : "light");
-  }, [darkMode]);
+  // // Save dark mode preference to localStorage
+  // useEffect(() => {
+  //   localStorage.setItem("theme", darkMode ? "dark" : "light");
+  // }, [darkMode]);
 
   // Handler for course registration
   const handleCourseRegistration = async (courseId: string) => {
@@ -423,12 +420,12 @@ export default function CoursesPage() {
       </div>
 
       {/* Theme toggle button */}
-      <button
+      {/* <button
         onClick={() => setDarkMode(!darkMode)}
         className="fixed right-5 bottom-5 p-3 bg-gray-800 text-white rounded-full shadow-lg"
       >
         {darkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-      </button>
+      </button> */}
     </div>
   );
 }

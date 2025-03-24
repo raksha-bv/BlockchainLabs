@@ -1,20 +1,16 @@
 import React from "react";
 import Link from "next/link";
-import { ChevronLeft, Sun, Moon, Menu, X } from "lucide-react";
+import { ChevronLeft, Menu, X } from "lucide-react";
 import { Course, ThemeMode } from "@/types/course";
 
 interface CourseHeaderProps {
   course: Course;
-  darkMode: ThemeMode;
-  setDarkMode: (mode: ThemeMode) => void;
   sidebarOpen: boolean;
   setSidebarOpen: (isOpen: boolean) => void;
 }
 
 export const CourseHeader: React.FC<CourseHeaderProps> = ({
   course,
-  darkMode,
-  setDarkMode,
   sidebarOpen,
   setSidebarOpen,
 }) => {
@@ -54,13 +50,13 @@ export const CourseHeader: React.FC<CourseHeaderProps> = ({
         </div>
         <div className="flex items-center gap-4">
           {/* Dark Mode Toggle Button */}
-          <button
+          {/* <button
             onClick={() => setDarkMode(darkMode === "dark" ? "light" : "dark")}
             className="p-2 rounded-full transition-colors duration-300 bg-gray-800 text-gray-300 hover:bg-gray-700"
             aria-label="Toggle theme"
           >
             {darkMode === "dark" ? <Sun size={20} /> : <Moon size={20} />}
-          </button>
+          </button> */}
 
           {/* Sidebar Toggle Button */}
           <button
