@@ -51,7 +51,7 @@ export type Props = {
   params: { id: string };
   searchParams: { [key: string]: string | string[] | undefined };
 };
-
+// Inside ClientCourse.tsx
 export function ClientCourse({ courseId, lessonId }: ClientCourseProps) {
   // Use React.use() to unwrap the params Promise
   const router = useRouter();
@@ -60,6 +60,7 @@ export function ClientCourse({ courseId, lessonId }: ClientCourseProps) {
 
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [course, setCourse] = useState<Course | null>(null);
+  const [courseCompleted, setCourseCompleted] = useState<boolean>(false);
   const [currentLesson, setCurrentLesson] = useState<Lesson | null>(null);
   const [darkMode, setDarkMode] = useState<ThemeMode>("dark");
   const [lessonCompleted, setLessonCompleted] = useState<{
@@ -75,6 +76,44 @@ export function ClientCourse({ courseId, lessonId }: ClientCourseProps) {
   // Get current lesson index
   const currentLessonIndex =
     course?.lessons.findIndex((l) => l.id === currentLesson?.id) ?? 0;
+
+  // Effect to check course completion from API
+  useEffect(() => {
+    const fetchCourseStatus = async () => {
+      if (!session?.user?.email || !courseId) return;
+      
+      try {
+        const response = await fetch(`/api/users/courses?email=${encodeURIComponent(session.user.email)}`);
+        const data = await response.json();
+        
+        if (data.success && data.courses) {
+          const courseData = data.courses.find((c: any) => c.id === courseId);
+          if (courseData) {
+            setCourseCompleted(courseData.completed || false);
+          }
+        }
+      } catch (error) {
+        console.error("Failed to fetch course status:", error);
+      }
+    };
+
+    fetchCourseStatus();
+  }, [courseId, session?.user?.email]);
+
+  useEffect(() => {
+    if (course && lessonCompleted) {
+      // Check if all lessons are completed
+      const allLessonsCompleted = course.lessons.every(
+        (lesson) => lessonCompleted[lesson.id] === true
+      );
+      
+      // Only update course completion state if all lessons are completed
+      // and the API hasn't already marked it as completed
+      if (allLessonsCompleted && !courseCompleted) {
+        recordCourseCompletion();
+      }
+    }
+  }, [course, lessonCompleted, courseId, courseCompleted]);
 
   useEffect(() => {
     // Fetch course data based on the courseId
@@ -172,12 +211,55 @@ export function ClientCourse({ courseId, lessonId }: ClientCourseProps) {
         return;
       }
 
+      const response = await fetch("/api/users/courses", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ 
+          email, 
+          courseId,
+          completed: true 
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        // Update local state to reflect completion
+        setCourseCompleted(true);
+        
+        // Send additional data for user progression tracking
+        await updateUserProgress(email, courseId);
+      }
+    } catch (error) {
+      console.error("Failed to record course completion:", error);
+      setNotification({
+        show: true,
+        message: "Failed to record course completion. Please try again.",
+        type: "error",
+      });
+
+      // Hide notification after 5 seconds
+      setTimeout(() => {
+        setNotification({ show: false, message: "", type: "" });
+      }, 5000);
+    }
+  };
+  
+  // Update user progress in the course route
+  const updateUserProgress = async (email: string, courseId: string) => {
+    try {
       const response = await fetch("/api/users/course", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ email, courseId , course}),
+        body: JSON.stringify({ 
+          email, 
+          courseId,
+          course
+        }),
       });
 
       const data = await response.json();
@@ -212,17 +294,7 @@ export function ClientCourse({ courseId, lessonId }: ClientCourseProps) {
         }, 5000);
       }
     } catch (error) {
-      console.error("Failed to record course completion:", error);
-      setNotification({
-        show: true,
-        message: "Failed to record course completion. Please try again.",
-        type: "error",
-      });
-
-      // Hide notification after 5 seconds
-      setTimeout(() => {
-        setNotification({ show: false, message: "", type: "" });
-      }, 5000);
+      console.error("Failed to update user progress:", error);
     }
   };
 
@@ -271,6 +343,7 @@ export function ClientCourse({ courseId, lessonId }: ClientCourseProps) {
           lessonCompleted={lessonCompleted}
           sidebarOpen={sidebarOpen}
           handleLessonChange={handleLessonChange}
+          courseCompleted={courseCompleted}
         />
         {/* Main Content */}
         <main

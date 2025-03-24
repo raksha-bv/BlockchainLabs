@@ -8,6 +8,7 @@ interface CourseSidebarProps {
   currentLesson: Lesson;
   lessonCompleted: Record<string, boolean>;
   handleLessonChange: (lesson: Lesson) => void;
+  courseCompleted?: boolean; // Add this new prop
 }
 
 export const CourseSidebar: React.FC<CourseSidebarProps> = ({
@@ -16,6 +17,7 @@ export const CourseSidebar: React.FC<CourseSidebarProps> = ({
   currentLesson,
   lessonCompleted,
   handleLessonChange,
+  courseCompleted = false, // Default to false
 }) => {
   // Find the current lesson index
   const currentLessonIndex = course.lessons.findIndex(
@@ -28,7 +30,11 @@ export const CourseSidebar: React.FC<CourseSidebarProps> = ({
   // 3. It's before the current lesson (meaning user has seen it)
   // 4. It has been completed
   // 5. The previous lesson has been completed
+  // 6. The entire course is completed
   const isLessonUnlocked = (lesson: Lesson, index: number) => {
+    // If entire course is completed, all lessons are unlocked
+    if (courseCompleted) return true;
+
     // Current lesson is always accessible
     if (lesson.id === currentLesson.id) return true;
 
@@ -68,7 +74,10 @@ export const CourseSidebar: React.FC<CourseSidebarProps> = ({
       </div>
       <nav className="p-3 h-full overflow-y-auto">
         {course.lessons.map((lesson, index) => {
-          const isCompleted = !!lessonCompleted[lesson.id];
+          // Consider a lesson completed if either:
+          // 1. It's individually marked as completed in lessonCompleted
+          // 2. The entire course is marked as completed
+          const isCompleted = courseCompleted || !!lessonCompleted[lesson.id];
           const isCurrentLesson = currentLesson.id === lesson.id;
           const isUnlocked = isLessonUnlocked(lesson, index);
 
