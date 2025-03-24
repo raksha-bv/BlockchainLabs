@@ -12,10 +12,11 @@ import {
   Users,
   Zap,
   Award,
+  CheckCircle,
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import BackButton from "@/components/BackButton";
-import { useSession } from "next-auth/react"; // Make sure you have next-auth set up
+import { useSession } from "next-auth/react";
 
 // Course type definition
 export interface Course {
@@ -34,6 +35,7 @@ export default function CoursesPage() {
   const [courses, setCourses] = useState<Course[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [userCourses, setUserCourses] = useState<string[]>([]);
+  const [completedCourses, setCompletedCourses] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [filter, setFilter] = useState<
     "all" | "Beginner" | "Intermediate" | "Advanced"
@@ -60,9 +62,10 @@ export default function CoursesPage() {
     fetchCourses();
   }, []);
 
-  // Fetch user's registered courses if user is logged in
+  // Fetch user's registered courses and completed courses if user is logged in
   useEffect(() => {
     if (session?.user?.email) {
+      // Fetch registered courses
       const fetchUserCourses = async () => {
         try {
           const response = await fetch(
@@ -72,39 +75,43 @@ export default function CoursesPage() {
             const data = await response.json();
             // Extract just the course IDs
             setUserCourses(data.courses.map((course: any) => course.id));
+
+            // Extract completed courses
+            const completedCourseIds = data.courses
+              .filter((course: any) => course.completed)
+              .map((course: any) => course.id);
+            setCompletedCourses(completedCourseIds);
           }
         } catch (error) {
           console.error("Failed to fetch user courses:", error);
         }
       };
 
+      // Fetch user completions directly from user data
+      const fetchCompletedCourses = async () => {
+        try {
+          const response = await fetch(
+            `/api/users/user?email=${session.user?.email}`
+          );
+          if (response.ok) {
+            const userData = await response.json();
+            if (userData.data.completedCourses) {
+              // Extract just the course IDs from completedCourses array
+              const completedIds = userData.data.completedCourses.map(
+                (course: any) => course.courseId
+              );
+              setCompletedCourses(completedIds);
+            }
+          }
+        } catch (error) {
+          console.error("Failed to fetch completed courses:", error);
+        }
+      };
+
       fetchUserCourses();
+      fetchCompletedCourses();
     }
   }, [session]);
-
-  // Apply dark mode class to document
-  // useEffect(() => {
-  //   if (darkMode) {
-  //     document.documentElement.classList.add("dark");
-  //   } else {
-  //     document.documentElement.classList.remove("dark");
-  //   }
-  // }, [darkMode]);
-
-  // // Initialize dark mode from localStorage
-  // useEffect(() => {
-  //   const savedTheme = localStorage.getItem("theme");
-  //   if (savedTheme === "dark") {
-  //     setDarkMode(true);
-  //   } else if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
-  //     setDarkMode(true);
-  //   }
-  // }, []);
-
-  // // Save dark mode preference to localStorage
-  // useEffect(() => {
-  //   localStorage.setItem("theme", darkMode ? "dark" : "light");
-  // }, [darkMode]);
 
   // Handler for course registration
   const handleCourseRegistration = async (courseId: string) => {
@@ -174,6 +181,11 @@ export default function CoursesPage() {
       default:
         return "text-gray-400 bg-gray-400/20";
     }
+  };
+
+  // Check if a course is completed
+  const isCourseCompleted = (courseId: string) => {
+    return completedCourses.includes(courseId);
   };
 
   if (isLoading) {
@@ -330,6 +342,32 @@ export default function CoursesPage() {
               ))}
           </div>
 
+          {/* Progress stats - new section */}
+          {session?.user && (
+            <div className="bg-gray-900/60 rounded-lg border border-violet-900/50 p-4 mb-8">
+              <div className="flex flex-wrap items-center justify-between gap-4">
+                <h3 className="text-lg font-medium text-white">
+                  Your Progress
+                </h3>
+                <div className="flex gap-4">
+                  <div className="flex items-center">
+                    <div className="w-3 h-3 rounded-full bg-green-500 mr-2"></div>
+                    <span className="text-sm text-gray-300">
+                      Completed: {completedCourses.length}
+                    </span>
+                  </div>
+                  <div className="flex items-center">
+                    <div className="w-3 h-3 rounded-full bg-blue-500 mr-2"></div>
+                    <span className="text-sm text-gray-300">
+                      In Progress:{" "}
+                      {userCourses.length - completedCourses.length}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Course grid - simplified cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredCourses.length === 0 ? (
@@ -345,87 +383,108 @@ export default function CoursesPage() {
                 </div>
               </div>
             ) : (
-              filteredCourses.map((course) => (
-                <div
-                  key={course.id}
-                  className="bg-gray-900/60 border border-violet-900/30 rounded-lg overflow-hidden hover:border-violet-700 transition-all group flex flex-col h-full"
-                >
-                  <div className="p-5 flex-grow flex flex-col">
-                    <div className="flex justify-between items-start mb-3">
-                      <span
-                        className={`text-xs font-medium px-2 py-0.5 rounded-full ${getDifficultyColor(
-                          course.level
-                        )}`}
+              filteredCourses.map((course) => {
+                const isCompleted = isCourseCompleted(course.id);
+                const isRegistered = userCourses.includes(course.id);
+
+                return (
+                  <div
+                    key={course.id}
+                    className={`bg-gray-900/60 border rounded-lg overflow-hidden transition-all group flex flex-col h-full ${
+                      isCompleted
+                        ? "border-green-600/50 shadow-[0_0_15px_rgba(34,197,94,0.1)]"
+                        : isRegistered
+                        ? "border-blue-600/50"
+                        : "border-violet-900/30 hover:border-violet-700"
+                    }`}
+                  >
+                    <div className="p-5 flex-grow flex flex-col">
+                      <div className="flex justify-between items-start mb-3">
+                        <div className="flex items-center gap-2">
+                          <span
+                            className={`text-xs font-medium px-2 py-0.5 rounded-full ${getDifficultyColor(
+                              course.level
+                            )}`}
+                          >
+                            {course.level}
+                          </span>
+                          {isCompleted && (
+                            <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-green-400/20 text-green-400 flex items-center">
+                              <CheckCircle className="w-3 h-3 mr-1" />
+                              Completed
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex items-center text-gray-400 text-sm">
+                          <Users className="w-3 h-3 mr-1" />
+                          {course.registrations.toLocaleString()}
+                        </div>
+                      </div>
+
+                      <h3 className="text-lg font-semibold mb-2 text-white group-hover:text-violet-400 transition-colors">
+                        {course.title}
+                      </h3>
+                      <p className="text-gray-400 text-sm mb-4 line-clamp-2 flex-grow">
+                        {course.description}
+                      </p>
+
+                      {/* Tags moved to bottom */}
+                      <div className="flex flex-wrap gap-1 mb-3">
+                        {course.tags.slice(0, 3).map((tag) => (
+                          <span
+                            key={tag}
+                            className="px-2 py-0.5 text-xs bg-gray-800 text-gray-300 rounded"
+                          >
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+
+                      {/* Duration and lesson count moved to bottom */}
+                      <div className="flex justify-between items-center text-sm text-gray-400 mt-auto">
+                        <div className="flex items-center">
+                          <Clock className="w-4 h-4 mr-1" />
+                          {course.duration}
+                        </div>
+                        <div className="flex items-center">
+                          <Book className="w-4 h-4 mr-1" />
+                          {course.lessonCount} lessons
+                        </div>
+                      </div>
+                    </div>
+
+                    {isCompleted ? (
+                      <Link
+                        href={`/courses/${course.id}`}
+                        className="block bg-green-700 hover:bg-green-600 px-5 py-3 text-center text-sm font-medium text-white transition-colors"
                       >
-                        {course.level}
-                      </span>
-                      <div className="flex items-center text-gray-400 text-sm">
-                        <Users className="w-3 h-3 mr-1" />
-                        {course.registrations.toLocaleString()}
-                      </div>
-                    </div>
-
-                    <h3 className="text-lg font-semibold mb-2 text-white group-hover:text-violet-400 transition-colors">
-                      {course.title}
-                    </h3>
-                    <p className="text-gray-400 text-sm mb-4 line-clamp-2 flex-grow">
-                      {course.description}
-                    </p>
-
-                    {/* Tags moved to bottom */}
-                    <div className="flex flex-wrap gap-1 mb-3">
-                      {course.tags.slice(0, 3).map((tag) => (
-                        <span
-                          key={tag}
-                          className="px-2 py-0.5 text-xs bg-gray-800 text-gray-300 rounded"
-                        >
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
-
-                    {/* Duration and lesson count moved to bottom */}
-                    <div className="flex justify-between items-center text-sm text-gray-400 mt-auto">
-                      <div className="flex items-center">
-                        <Clock className="w-4 h-4 mr-1" />
-                        {course.duration}
-                      </div>
-                      <div className="flex items-center">
-                        <Book className="w-4 h-4 mr-1" />
-                        {course.lessonCount} lessons
-                      </div>
-                    </div>
+                        <div className="flex items-center justify-center">
+                          <CheckCircle className="w-4 h-4 mr-2" />
+                          Review Course
+                        </div>
+                      </Link>
+                    ) : isRegistered ? (
+                      <Link
+                        href={`/courses/${course.id}`}
+                        className="block bg-blue-700 hover:bg-blue-600 px-5 py-3 text-center text-sm font-medium text-white transition-colors"
+                      >
+                        Continue Learning
+                      </Link>
+                    ) : (
+                      <button
+                        onClick={() => handleCourseRegistration(course.id)}
+                        className="block w-full bg-gray-800 hover:bg-violet-700 px-5 py-3 text-center text-sm font-medium text-white transition-colors"
+                      >
+                        Start Course
+                      </button>
+                    )}
                   </div>
-
-                  {userCourses.includes(course.id) ? (
-                    <Link
-                      href={`/courses/${course.id}`}
-                      className="block bg-violet-700 hover:bg-violet-600 px-5 py-3 text-center text-sm font-medium text-white transition-colors"
-                    >
-                      Continue Learning
-                    </Link>
-                  ) : (
-                    <button
-                      onClick={() => handleCourseRegistration(course.id)}
-                      className="block w-full bg-gray-800 hover:bg-violet-700 px-5 py-3 text-center text-sm font-medium text-white transition-colors"
-                    >
-                      Start Course
-                    </button>
-                  )}
-                </div>
-              ))
+                );
+              })
             )}
           </div>
         </div>
       </div>
-
-      {/* Theme toggle button */}
-      {/* <button
-        onClick={() => setDarkMode(!darkMode)}
-        className="fixed right-5 bottom-5 p-3 bg-gray-800 text-white rounded-full shadow-lg"
-      >
-        {darkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-      </button> */}
     </div>
   );
 }

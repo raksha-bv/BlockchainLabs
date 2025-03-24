@@ -1,6 +1,7 @@
 import React from "react";
 import { ChevronLeft, CheckIcon } from "lucide-react";
 import { Course, Lesson } from "@/types/course";
+import { useRouter } from "next/navigation";
 
 interface LessonNavigationProps {
   course: Course;
@@ -8,6 +9,8 @@ interface LessonNavigationProps {
   lessonCompleted: Record<string, boolean>;
   handleLessonChange: (lesson: Lesson) => void;
   recordCourseCompletion: () => void;
+  courseCompleted: boolean;
+  
 }
 
 export const LessonNavigation: React.FC<LessonNavigationProps> = ({
@@ -16,8 +19,10 @@ export const LessonNavigation: React.FC<LessonNavigationProps> = ({
   lessonCompleted,
   handleLessonChange,
   recordCourseCompletion,
+  courseCompleted = false,
 }) => {
   // Get current lesson index
+  const router = useRouter();
   const currentLessonIndex = course.lessons.findIndex(
     (l) => l.id === currentLesson.id
   );
@@ -29,6 +34,11 @@ export const LessonNavigation: React.FC<LessonNavigationProps> = ({
       !currentLesson.problemStatement ||
       lessonCompleted[currentLesson.id] === true
     );
+  };
+
+  const completeCourse = () => {
+    recordCourseCompletion();
+    router.push("/courses");
   };
 
   return (
@@ -64,6 +74,10 @@ export const LessonNavigation: React.FC<LessonNavigationProps> = ({
           Next Lesson
           <ChevronLeft className="w-5 h-5 ml-2 rotate-180" />
         </button>
+      ) : courseCompleted ? (
+        <button onClick={()=>{router.push("/courses")}} className="px-4 py-2 rounded-lg transition-colors flex items-center ml-auto bg-green-600 hover:bg-green-500 text-white">
+         Explore Courses
+        </button>
       ) : (
         <button
           className={`px-4 py-2 rounded-lg transition-colors flex items-center ml-auto ${
@@ -73,7 +87,7 @@ export const LessonNavigation: React.FC<LessonNavigationProps> = ({
           }`}
           onClick={() => {
             if (canProceedToNextLesson()) {
-              recordCourseCompletion();
+              completeCourse();
             }
           }}
           disabled={!canProceedToNextLesson()}

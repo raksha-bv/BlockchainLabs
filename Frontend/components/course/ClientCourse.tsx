@@ -427,6 +427,7 @@ export function ClientCourse({ courseId, lessonId }: ClientCourseProps) {
               lessonCompleted={lessonCompleted}
               handleLessonChange={handleLessonChange}
               recordCourseCompletion={recordCourseCompletion}
+              courseCompleted={courseCompleted}
             />
 
             {/* Additional info card */}
