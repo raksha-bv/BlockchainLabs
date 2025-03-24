@@ -6,6 +6,7 @@ import clientPromise from "@/lib/mongodb";
 export interface UserData {
   username: string;
   image: string;
+  completedCourses: { courseId: string; course: any }[];
   courseCompleted: number;
   submissions: number;
   acceptedSubmissions: number;
@@ -18,6 +19,7 @@ export interface UserData {
 export const defaultUserData: UserData = {
   username: "",
   image: "",
+  completedCourses: [],
   courseCompleted: 0,
   submissions: 0,
   acceptedSubmissions: 0,

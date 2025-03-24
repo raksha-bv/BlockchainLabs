@@ -177,7 +177,7 @@ export function ClientCourse({ courseId, lessonId }: ClientCourseProps) {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email, courseId , course}),
       });
 
       const data = await response.json();
