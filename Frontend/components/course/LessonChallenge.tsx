@@ -72,65 +72,44 @@ const LessonChallenge: React.FC<LessonChallengeProps> = ({
     setValidationStatus("validating");
     setShowValidation(true);
 
-    // Simulate API call delay
-    await new Promise((resolve) => setTimeout(resolve, 1500));
+    try {
+      const response = await fetch("/api/validate-code", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ code, lessonId }),
+      });
 
-    // Check for required elements in the code
-    let isValid = true;
-    let error = "";
-
-    // Basic validation for the Bank contract challenge
-    if (lessonId === "solidity-functions") {
-      if (!code.includes("address") && !code.includes("owner")) {
-        isValid = false;
-        error += "Missing owner address declaration.\n";
+      if (!response.ok) {
+        throw new Error(`Error: ${response.status}`);
       }
 
-      if (
-        !code.includes("constructor") ||
-        !code.includes("owner = msg.sender")
-      ) {
-        isValid = false;
-        error += "Constructor should set owner to msg.sender.\n";
+      const result = await response.json();
+
+      setValidationResult({
+        status: result.isValid,
+        syntax_correct: result.syntax_correct ?? true,
+        compilable_code: result.compilable_code ?? result.isValid,
+        error: result.error || null,
+      });
+
+      setValidationStatus(result.isValid ? "valid" : "invalid");
+
+      if (result.isValid) {
+        setTimeout(() => {
+          onChallengeComplete();
+        }, 2000);
       }
-
-      if (!code.includes("modifier onlyOwner")) {
-        isValid = false;
-        error += "Missing onlyOwner modifier.\n";
-      }
-
-      if (!code.includes("function deposit") || !code.includes("payable")) {
-        isValid = false;
-        error += "Missing payable deposit function.\n";
-      }
-
-      if (
-        !code.includes("function withdraw") ||
-        !code.includes("onlyOwner") ||
-        (!code.toLowerCase().includes("transfer") &&
-          !code.toLowerCase().includes("send") &&
-          !code.toLowerCase().includes("call"))
-      ) {
-        isValid = false;
-        error +=
-          "Missing or incorrect withdraw function with owner restriction.\n";
-      }
-    }
-
-    setValidationResult({
-      status: isValid,
-      syntax_correct: true, // Simplified for this example
-      compilable_code: isValid,
-      error: error || null,
-    });
-
-    setValidationStatus(isValid ? "valid" : "invalid");
-
-    // If valid, enable proceeding to next lesson
-    if (isValid) {
-      setTimeout(() => {
-        onChallengeComplete();
-      }, 2000);
+    } catch (error) {
+      console.error("Validation error:", error);
+      setValidationResult({
+        status: false,
+        syntax_correct: false,
+        compilable_code: false,
+        error: "An error occurred while validating the code.",
+      });
+      setValidationStatus("invalid");
     }
   };
 
