@@ -7,13 +7,13 @@ import { useSession } from "next-auth/react";
 
 
 
-const Navbar = () => {
+const RoadMapNavbar = () => {
   const [isHovered, setIsHovered] = useState(false);
   const { data: session, status } = useSession();
   console.log(session);
   
   return (
-    <nav className="absolute top-0 z-10 flex justify-between items-center px-6 md:px-12 py-4 w-full">
+    <nav className="z-10 flex justify-between items-center px-6 md:px-12 py-4 w-full">
       <div className="flex items-center">
         <Link
           href="/"
@@ -65,16 +65,9 @@ const Navbar = () => {
         ) : (
           <SignIn />
         )}
-
-        {/* <Link
-          href="/get-started"
-          className="px-5 py-2 bg-violet-700 hover:bg-violet-600 rounded-md text-white transition-all transform hover:scale-105 hover:shadow-lg hover:shadow-violet-500/30"
-        >
-          Get Started
-        </Link> */}
       </div>
     </nav>
   );
 };
 
-export default Navbar;
+export default RoadMapNavbar;

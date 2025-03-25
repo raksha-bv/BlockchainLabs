@@ -19,9 +19,8 @@ import {
   Linkedin,
   Twitter,
 } from "lucide-react";
-import Navbar from "@/components/Navbar";
-import RoadMapFooter from "@/components/RoadmapFooter";
-import CoursePageFooter from "@/components/course/CoursePageFooter";
+import RoadMapNavbar from "@/components/RoadmapNavbar";
+import Footer from "@/components/Footer";
 
 const LearningPaths = () => {
   const [selectedNode, setSelectedNode] = useState<{
@@ -153,7 +152,7 @@ const LearningPaths = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-black text-gray-100 flex flex-col">
-      <Navbar />
+      <RoadMapNavbar />
 
       <div className="max-w-6xl mx-auto px-4 py-16 flex-grow">
         <div className="flex space-x-8">
@@ -294,8 +293,7 @@ const LearningPaths = () => {
         </div>
       </div>
 
-      {/* Footer */}
-      <CoursePageFooter />
+      <Footer />
     </div>
   );
 };

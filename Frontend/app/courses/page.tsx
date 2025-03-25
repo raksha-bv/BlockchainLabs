@@ -18,7 +18,7 @@ import Navbar from "@/components/Navbar";
 import BackButton from "@/components/BackButton";
 import { useSession } from "next-auth/react";
 import MotivationSection from "@/components/MotivationSection";
-import CoursePageFooter from "@/components/course/CoursePageFooter";
+import Footer from "@/components/Footer";
 
 // Course type definition
 export interface Course {
@@ -488,7 +488,7 @@ export default function CoursesPage() {
         </div>
       </div>
       <MotivationSection />
-      <CoursePageFooter />
+      <Footer />
     </div>
   );
 }
