@@ -17,6 +17,8 @@ import {
 import Navbar from "@/components/Navbar";
 import BackButton from "@/components/BackButton";
 import { useSession } from "next-auth/react";
+import MotivationSection from "@/components/MotivationSection";
+import CoursePageFooter from "@/components/course/CoursePageFooter";
 
 // Course type definition
 export interface Course {
@@ -208,7 +210,7 @@ export default function CoursesPage() {
       {/* Header area with title */}
       <div className="relative z-10">
         <Navbar />
-        <div className="max-w-6xl mx-auto px-6 py-12 ">
+        <div id="courses" className="max-w-6xl mx-auto px-6 py-12 ">
           <div className="text-center mb-12 mt-12">
             <div className="mb-3">
               <span className="bg-violet-900/30 text-violet-400 text-xs font-medium px-3 py-1 rounded-full inline-block">
@@ -485,6 +487,8 @@ export default function CoursesPage() {
           </div>
         </div>
       </div>
+      <MotivationSection />
+      <CoursePageFooter />
     </div>
   );
 }
