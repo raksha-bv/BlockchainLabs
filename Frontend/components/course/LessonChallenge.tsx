@@ -44,7 +44,7 @@ const themeColors = {
 interface LessonChallengeProps {
   lessonId: string;
   darkMode: boolean;
-  onChallengeComplete: () => void;
+  onChallengeComplete: () => Promise<void>;
   initialCode?: string;
   problemStatement: ProblemStatement;
 }
@@ -67,7 +67,6 @@ const LessonChallenge: React.FC<LessonChallengeProps> = ({
   const themeMode = darkMode ? "dark" : "light";
   const colors = themeColors[themeMode];
 
-  // Validation function - in a real app, this would call an API
   const validateCode = async () => {
     setValidationStatus("validating");
     setShowValidation(true);
@@ -86,17 +85,21 @@ const LessonChallenge: React.FC<LessonChallengeProps> = ({
       }
 
       const result = await response.json();
+      console.log("Validation API Response:", result); // Debugging
+
+      // Ensure the correct field is being checked
+      const isValid = result.status === true; // Use `status` instead of `isValid`
 
       setValidationResult({
-        status: result.isValid,
+        status: isValid,
         syntax_correct: result.syntax_correct ?? true,
-        compilable_code: result.compilable_code ?? result.isValid,
+        compilable_code: result.compilable_code ?? isValid,
         error: result.error || null,
       });
 
-      setValidationStatus(result.isValid ? "valid" : "invalid");
+      setValidationStatus(isValid ? "valid" : "invalid");
 
-      if (result.isValid) {
+      if (isValid) {
         setTimeout(() => {
           onChallengeComplete();
         }, 2000);
