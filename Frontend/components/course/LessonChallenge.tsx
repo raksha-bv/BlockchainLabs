@@ -44,7 +44,7 @@ const themeColors = {
 interface LessonChallengeProps {
   lessonId: string;
   darkMode: boolean;
-  onChallengeComplete: () => Promise<void>;
+  onChallengeComplete: () => void;
   initialCode?: string;
   problemStatement: ProblemStatement;
 }
