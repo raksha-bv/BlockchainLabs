@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Web3 Labs",
+  title: "BlockchainLabs",
   description: "Empowering Web3 Explorers",
 };
 
