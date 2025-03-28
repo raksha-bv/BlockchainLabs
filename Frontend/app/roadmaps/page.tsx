@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import RoadMapNavbar from "@/components/RoadmapNavbar";
 import Footer from "@/components/Footer";
+import Link from "next/link";
 
 const LearningPaths = () => {
   const [selectedNode, setSelectedNode] = useState<{
@@ -29,6 +30,7 @@ const LearningPaths = () => {
     icon: React.ReactNode;
     prerequisite?: string | null;
     skills?: string[];
+    link?: string;
   } | null>(null);
   const [selectedPath, setSelectedPath] = useState<"beginner" | "intermediate">(
     "beginner"
@@ -47,6 +49,7 @@ const LearningPaths = () => {
           "Decentralization",
           "Consensus Mechanisms",
         ],
+        link: "/courses",
       },
       {
         title: "Solidity Basics",
@@ -55,6 +58,7 @@ const LearningPaths = () => {
         icon: <Code className="w-6 h-6 text-green-400" />,
         prerequisite: "Complete Intro to Blockchain",
         skills: ["Solidity", "Smart Contracts", "Basic Programming"],
+        link: "/courses",
       },
       {
         title: "Practice Arena",
@@ -63,6 +67,7 @@ const LearningPaths = () => {
         icon: <Target className="w-6 h-6 text-blue-400" />,
         prerequisite: "Complete Solidity Basics",
         skills: ["Problem Solving", "Coding Challenges", "AI Feedback"],
+        link: "/practice",
       },
       {
         title: "Small Projects",
@@ -75,6 +80,7 @@ const LearningPaths = () => {
           "Practical Application",
           "Real-world Solutions",
         ],
+        link: "/code",
       },
       {
         title: "Beginner Certification",
@@ -87,6 +93,7 @@ const LearningPaths = () => {
           "Skill Validation",
           "Professional Recognition",
         ],
+        link: "/courses",
       },
     ],
     intermediate: [
@@ -97,6 +104,7 @@ const LearningPaths = () => {
         icon: <Code className="w-6 h-6 text-green-400" />,
         prerequisite: "Complete Beginner Path",
         skills: ["Advanced Solidity", "Complex Contracts", "Design Patterns"],
+        link: "/courses",
       },
       {
         title: "DeFi Concepts",
@@ -105,6 +113,7 @@ const LearningPaths = () => {
         icon: <BookOpen className="w-6 h-6 text-violet-400" />,
         prerequisite: "Complete Advanced Solidity",
         skills: ["DeFi Protocols", "Liquidity Pools", "Financial Mechanisms"],
+        link: "/courses",
       },
       {
         title: "Smart Contract Security",
@@ -117,6 +126,7 @@ const LearningPaths = () => {
           "Vulnerability Assessment",
           "Best Practices",
         ],
+        link: "/courses",
       },
       {
         title: "Advanced Projects",
@@ -129,6 +139,7 @@ const LearningPaths = () => {
           "Ecosystem Contribution",
           "Advanced Development",
         ],
+        link: "/courses",
       },
       {
         title: "Professional Certification",
@@ -257,29 +268,30 @@ const LearningPaths = () => {
                   </p>
 
                   {selectedNode.skills && (
-                    <div className="mb-6">
-                      <h4 className="text-xl font-semibold text-white mb-3">
-                        Skills You'll Learn:
-                      </h4>
-                      <div className="flex flex-wrap gap-2">
-                        {selectedNode.skills?.map((skill, index) => (
-                          <span
-                            key={index}
-                            className="bg-gray-800 text-gray-300 px-3 py-1 rounded-full text-sm hover:bg-violet-700 hover:text-white transition-colors"
-                          >
-                            {skill}
-                          </span>
-                        ))}
+                    <div>
+                      <div className="mb-6">
+                        <h4 className="text-xl font-semibold text-white mb-3">
+                          Skills You'll Learn:
+                        </h4>
+                        <div className="flex flex-wrap gap-2">
+                          {selectedNode.skills?.map((skill, index) => (
+                            <span
+                              key={index}
+                              className="bg-gray-800 text-gray-300 px-3 py-1 rounded-full text-sm hover:bg-violet-700 hover:text-white transition-colors"
+                            >
+                              {skill}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="mt-6 flex justify-end">
+                        <button className="bg-violet-700 text-white px-6 py-2 rounded-full flex items-center space-x-2 hover:bg-violet-600 transition-colors">
+                          <Link href={selectedNode.link || "/courses"}>Start Learning</Link>
+                          <ChevronRight className="w-5 h-5" />
+                        </button>
                       </div>
                     </div>
                   )}
-
-                  <div className="mt-6 flex justify-end">
-                    <button className="bg-violet-700 text-white px-6 py-2 rounded-full flex items-center space-x-2 hover:bg-violet-600 transition-colors">
-                      <span>Start Learning</span>
-                      <ChevronRight className="w-5 h-5" />
-                    </button>
-                  </div>
                 </div>
               ) : (
                 <div className="bg-gray-900/60 border border-violet-900/50 rounded-lg p-6 text-center">

@@ -21,6 +21,7 @@ import {
   Medal,
   Brain,
 } from "lucide-react";
+import Image from "next/image";
 
 // Type for profile data
 interface UserProfile {
@@ -277,10 +278,12 @@ const ProfilePage = () => {
                 {session.user.image ? (
                   <div className="relative">
                     <div className="absolute inset-0 rounded-full bg-gradient-to-r from-violet-500 to-fuchsia-500 blur-md opacity-50"></div>
-                    <img
+                    <Image
                       src={session.user.image}
                       alt="Profile"
-                      className="relative w-24 h-24 rounded-full border-4 border-violet-700 object-cover shadow-md shadow-violet-900/50"
+                      width={96} // Equivalent to w-24
+                      height={96} // Equivalent to h-24
+                      className="relative rounded-full border-4 border-violet-700 object-cover shadow-md shadow-violet-900/50"
                     />
                   </div>
                 ) : (
